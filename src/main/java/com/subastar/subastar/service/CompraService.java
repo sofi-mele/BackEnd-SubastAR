@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CompraService {
 
+    private final MedioPagoService medioPagoService;
     private final RegistroDeSubastaRepository registroRepository;
     private final CompraExtraRepository compraExtraRepository;
     private final MultaRepository multaRepository;
@@ -75,6 +76,7 @@ public class CompraService {
         extra.setMedioPagoId(req.getMedioPagoId());
         extra.setEstadoPago("pagado");
         compraExtraRepository.save(extra);
+        medioPagoService.recalcularCategoria(clienteId);
 
         // M-10: notificar al cliente que su pago fue registrado
         CompraDetalle detalle = toDetalle(r, extra);
@@ -162,6 +164,7 @@ public class CompraService {
         if (extra.getBeneficiarioId() == null) {
             extra.setBeneficiarioId(clienteGanadorId);
             seguroExtraRepository.save(extra);
+            medioPagoService.recalcularCategoria(registro.getCliente().getIdentificador());
         }
     }
 
