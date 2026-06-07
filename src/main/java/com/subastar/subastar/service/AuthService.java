@@ -228,7 +228,7 @@ public class AuthService {
     @Transactional
     public void solicitarRecuperacion(RecuperarPasswordRequest req) {
         Credencial credencial = credencialRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("No existe ninguna cuenta con ese email"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         String token = UUID.randomUUID().toString();
         credencial.setResetToken(token);
