@@ -55,6 +55,9 @@ public class ProductoDetalle {
     @Column(name = "ubicacion_deposito")
     private String ubicacionDeposito;
 
+    @Column(name = "cuenta_cobro_id")
+    private Integer cuentaCobroId;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", insertable = false, updatable = false)
     private Producto producto;

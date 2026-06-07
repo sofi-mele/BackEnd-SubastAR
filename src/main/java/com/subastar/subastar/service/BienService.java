@@ -37,6 +37,7 @@ public class BienService {
     private final NotificacionService notificacionService;
     private final EmpleadoRepository empleadoRepository;
     private final DuenioRepository duenioRepository;
+    private final CuentaCobroRepository cuentaCobroRepository;
 
     private static final int MIN_FOTOS = 6;
 
@@ -344,12 +345,12 @@ public class BienService {
     }
 
     @Transactional
-    public void aceptarCondiciones(String email, Integer productoId, boolean acepta) {
+    public void aceptarCondiciones(String email, Integer productoId, AceptarCondicionesRequest req) {
         Integer clienteId = getClienteId(email);
         ProductoDetalle det = productoDetalleRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
         if (!clienteId.equals(det.getClienteId())) throw new ForbiddenException("El bien no pertenece al usuario");
-        if (!acepta) {
+        if (!req.isAcepta()) {
             det.setEstadoSolicitud("rechazado");
             det.setMotivoRechazo("El usuario rechazó las condiciones propuestas");
 
@@ -363,6 +364,11 @@ public class BienService {
                     .orElse(java.math.BigDecimal.ZERO);
 
             notificacionService.notificarDevolucion(cliente, det.getNombre(), costoDev);
+        } else if (req.getCuentaCobroId() != null) {
+            cuentaCobroRepository.findById(req.getCuentaCobroId())
+                    .filter(cc -> cc.getClienteId().equals(clienteId))
+                    .orElseThrow(() -> new ResourceNotFoundException("Cuenta de cobro no encontrada"));
+            det.setCuentaCobroId(req.getCuentaCobroId());
         }
         productoDetalleRepository.save(det);
     }

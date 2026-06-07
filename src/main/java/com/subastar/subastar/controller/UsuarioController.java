@@ -1,7 +1,10 @@
 package com.subastar.subastar.controller;
 
+import com.subastar.subastar.dto.cuentaCobro.CuentaCobroRequest;
+import com.subastar.subastar.dto.cuentaCobro.CuentaCobroResponse;
 import com.subastar.subastar.dto.medioPago.*;
 import com.subastar.subastar.dto.usuario.*;
+import com.subastar.subastar.service.CuentaCobroService;
 import com.subastar.subastar.service.MedioPagoService;
 import com.subastar.subastar.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -23,6 +26,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final MedioPagoService medioPagoService;
+    private final CuentaCobroService cuentaCobroService;
 
     @GetMapping("/me")
     public ResponseEntity<UsuarioDetalle> getMe(@AuthenticationPrincipal UserDetails user) {
@@ -43,6 +47,22 @@ public class UsuarioController {
     @GetMapping("/me/metricas")
     public ResponseEntity<MetricasResponse> getMetricas(@AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(usuarioService.getMetricas(user.getUsername()));
+    }
+
+    // ── Cuentas de cobro ──
+
+    @GetMapping("/me/cuentas-cobro")
+    public ResponseEntity<List<CuentaCobroResponse>> listarCuentasCobro(
+            @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(cuentaCobroService.listar(user.getUsername()));
+    }
+
+    @PostMapping("/me/cuentas-cobro")
+    public ResponseEntity<CuentaCobroResponse> crearCuentaCobro(
+            @Valid @RequestBody CuentaCobroRequest req,
+            @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(cuentaCobroService.crear(user.getUsername(), req));
     }
 
     // ── Medios de pago ──

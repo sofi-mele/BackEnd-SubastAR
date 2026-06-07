@@ -122,10 +122,9 @@ public class BienController {
     @PostMapping("/mis-bienes/{id}/aceptar-condiciones")
     public ResponseEntity<Map<String, String>> aceptarCondiciones(
             @PathVariable Integer id,
-            @RequestBody Map<String, Boolean> body,
+            @RequestBody AceptarCondicionesRequest body,
             @AuthenticationPrincipal UserDetails user) {
-        boolean acepta = Boolean.TRUE.equals(body.get("acepta"));
-        bienService.aceptarCondiciones(user.getUsername(), id, acepta);
-        return ResponseEntity.ok(Map.of("message", acepta ? "Condiciones aceptadas" : "Condiciones rechazadas"));
+        bienService.aceptarCondiciones(user.getUsername(), id, body);
+        return ResponseEntity.ok(Map.of("message", body.isAcepta() ? "Condiciones aceptadas" : "Condiciones rechazadas"));
     }
 }
