@@ -29,6 +29,9 @@ public class MedioPago {
     @Column(name = "eliminado", nullable = false)
     private boolean eliminado;
 
+    @Column(name = "notificado_verificacion", nullable = false)
+    private boolean notificadoVerificacion;
+
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 

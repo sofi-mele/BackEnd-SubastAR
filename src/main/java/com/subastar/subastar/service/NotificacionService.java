@@ -45,6 +45,11 @@ public class NotificacionService {
         enviar(cliente, "bot", contenido);
     }
 
+    public void notificarMedioPagoVerificado(Cliente cliente, String descripcion) {
+        String contenido = "Tu medio de pago \"" + descripcion + "\" fue verificado y ya está habilitado para pujas y pagos.";
+        enviar(cliente, "bot", contenido);
+    }
+
     public void notificarMedioPagoEliminado(Cliente cliente, String descripcion) {
         String contenido = "Medio de pago eliminado: " + descripcion + ".";
         enviar(cliente, "bot", contenido);
