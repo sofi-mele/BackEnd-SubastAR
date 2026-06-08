@@ -213,6 +213,10 @@ public class AuthService {
         RegistroPendiente registro = registroPendienteRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("No hay ningún registro pendiente para ese email"));
 
+        if ("pendiente_revision".equals(registro.getEstado())) {
+            throw new BadRequestException("Tu registro aún está siendo revisado. Te notificaremos por email cuando sea aprobado.");
+        }
+
         if (registro.getCodigoExpiresAt() != null && LocalDateTime.now().isBefore(registro.getCodigoExpiresAt())) {
             throw new BadRequestException("El código anterior todavía es válido");
         }
