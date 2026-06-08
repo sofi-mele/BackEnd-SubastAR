@@ -209,7 +209,7 @@ public class ChatService {
         r.setTitulo(switch (m.getTipo()) {
             case "compra" -> "Compra";
             case "multa" -> "Multa";
-            case "bien" -> "Bien";
+            case "bien" -> "Aviso";
             case "poliza" -> "Póliza";
             case "soporte" -> "Soporte";
             default -> "Aviso";
@@ -223,7 +223,9 @@ public class ChatService {
     private MensajeChatResponse toResponse(ChatMensaje m) {
         MensajeChatResponse r = new MensajeChatResponse();
         r.setId(m.getId());
-        r.setEmisor(m.getEmisor());
+        // Normaliza 'sistema' como 'bot' para clientes que solo renderizan bot/cliente.
+        String emisor = m.getEmisor();
+        r.setEmisor("sistema".equalsIgnoreCase(emisor) ? "bot" : emisor);
         r.setContenido(m.getContenido());
         r.setTimestamp(m.getTimestampMsg());
         r.setLeido(m.isLeido());

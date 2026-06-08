@@ -51,9 +51,16 @@ public class NotificacionService {
     }
 
     public void notificarBienConfirmado(Cliente cliente, String nombreBien) {
-        String contenido = "Tu solicitud de consignación del bien \"" + nombreBien + "\" fue enviada para revisión.\n"
-                + "Te notificaremos cuando la empresa complete la inspección.";
-        enviar(cliente, "bot", contenido);
+        String contenido = "Tu bien \"" + nombreBien + "\" fue recibido y está siendo revisado por nuestro equipo.\n"
+                + "Te notificaremos cuando tengamos novedades.";
+        enviar(cliente, "bien", contenido);
+    }
+
+    public void notificarSolicitudBienCargada(Cliente cliente, String nombreBien) {
+        String nombre = (nombreBien == null || nombreBien.isBlank()) ? "tu bien" : "\"" + nombreBien + "\"";
+        String contenido = "Recibimos la carga de " + nombre + ".\n"
+                + "Tu solicitud quedó registrada y podés continuar desde Mis bienes.";
+        enviar(cliente, "bien", contenido);
     }
 
     public void notificarMulta(Cliente cliente, BigDecimal monto, String motivo) {
@@ -81,6 +88,13 @@ public class NotificacionService {
         String contenido = "Tu bien \"" + nombreBien + "\" no fue aceptado para subasta.\n"
                 + "Motivo: " + (motivo != null ? motivo : "Sin especificar") + "\n"
                 + "Podés contactar con la empresa para más información.";
+        enviar(cliente, "bien", contenido);
+    }
+
+    public void notificarInspeccionFisicaRequerida(Cliente cliente, String nombreBien) {
+        String contenido = "Estamos interesados en tu bien \"" + nombreBien + "\".\n"
+                + "Para continuar, traelo a nuestro depósito: Corrientes 2300, CABA (lun-vie 9-17 hs).\n"
+                + "Importante: si tras la inspección presencial no es aceptado, el costo de devolución corre por tu cuenta.";
         enviar(cliente, "bien", contenido);
     }
 

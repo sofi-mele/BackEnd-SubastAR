@@ -91,9 +91,14 @@ public class BienService {
         sol.setCuentaCobroBanco(req.getCuentaCobroBanco());
         sol.setCuentaCobroPais(req.getCuentaCobroPais());
         sol.setCuentaCobroCbuIban(req.getCuentaCobroCbuIban());
+        sol.setPrecioBaseSugerido(req.getPrecioBaseSugerido());
+        sol.setDivisaPrecioBaseSugerido(req.getDivisaPrecioBaseSugerido());
         sol.setEstado("datos_cargados");
         sol.setPasoActual("fotos");
         bienSolicitudRepository.save(sol);
+
+        notificacionService.notificarSolicitudBienCargada(sol.getCliente(), sol.getNombre());
+
         return toResponse(sol);
     }
 
@@ -218,8 +223,6 @@ public class BienService {
         sol.setPasoActual("confirmar");
         bienSolicitudRepository.save(sol);
 
-        notificacionService.notificarBienConfirmado(sol.getCliente(), sol.getNombre());
-
         return toResponse(sol);
     }
 
@@ -275,6 +278,8 @@ public class BienService {
         det.setFechaCreacionObra(sol.getFechaCreacionObra());
         det.setDatosHistoricos(sol.getDatosHistoricos());
         det.setInformacionAdicional(sol.getInformacionAdicional());
+        det.setPrecioBaseSugerido(sol.getPrecioBaseSugerido());
+        det.setDivisaPrecioBaseSugerido(sol.getDivisaPrecioBaseSugerido());
         det.setEstadoSolicitud("en_revision");
         productoDetalleRepository.save(det);
 
@@ -282,6 +287,8 @@ public class BienService {
         sol.setPasoActual("finalizado");
         sol.setProductoId(producto.getIdentificador());
         bienSolicitudRepository.save(sol);
+
+        notificacionService.notificarBienConfirmado(sol.getCliente(), sol.getNombre());
 
         BienSolicitudEnviadaResponse resp = new BienSolicitudEnviadaResponse();
         resp.setCodigoSolicitud(sol.getCodigoSolicitud());
@@ -345,11 +352,22 @@ public class BienService {
     }
 
     @Transactional
+    public void rechazarBien(Integer productoId, String motivo) {
+        ProductoDetalle det = productoDetalleRepository.findById(productoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
+        det.setEstadoSolicitud("rechazado");
+        det.setMotivoRechazo(motivo);
+        productoDetalleRepository.save(det);
+        // la notificación la genera el trigger de BD al detectar el cambio de estado
+    }
+
+    @Transactional
     public void aceptarCondiciones(String email, Integer productoId, AceptarCondicionesRequest req) {
         Integer clienteId = getClienteId(email);
         ProductoDetalle det = productoDetalleRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
         if (!clienteId.equals(det.getClienteId())) throw new ForbiddenException("El bien no pertenece al usuario");
+        det.setAceptoCondiciones(req.isAcepta());
         if (!req.isAcepta()) {
             det.setEstadoSolicitud("rechazado");
             det.setMotivoRechazo("El usuario rechazó las condiciones propuestas");
@@ -379,21 +397,33 @@ public class BienService {
         r.setNombre(det.getNombre());
         r.setEstado(det.getEstadoSolicitud());
         r.setMotivoRechazo(det.getMotivoRechazo());
+        r.setPrecioBase(det.getPrecioBase());
+        r.setComision(det.getComision());
+        r.setSubastaAsignada(det.getSubastaAsignada());
+        r.setPolizaId(det.getPolizaId());
+        r.setCostoEnvio(det.getCostoEnvio());
+        r.setAceptoCondiciones(det.getAceptoCondiciones());
         r.setUbicacionDeposito(det.getUbicacionDeposito());
 
-        itemCatalogoRepository.findAll().stream()
-                .filter(ic -> ic.getProducto().getIdentificador().equals(det.getProductoId()))
-                .findFirst()
-                .ifPresent(ic -> {
-                    r.setPrecioBase(ic.getPrecioBase());
-                    r.setComision(ic.getComision());
-                    String subastaName = ic.getCatalogo().getSubasta() != null
-                            ? "Subasta #" + ic.getCatalogo().getSubasta().getIdentificador() : null;
-                    r.setSubastaAsignada(subastaName);
-                });
+        if (r.getPrecioBase() == null || r.getComision() == null || r.getSubastaAsignada() == null) {
+            itemCatalogoRepository.findAll().stream()
+                    .filter(ic -> ic.getProducto().getIdentificador().equals(det.getProductoId()))
+                    .findFirst()
+                    .ifPresent(ic -> {
+                        if (r.getPrecioBase() == null) {
+                            r.setPrecioBase(ic.getPrecioBase());
+                        }
+                        if (r.getComision() == null) {
+                            r.setComision(ic.getComision());
+                        }
+                        if (r.getSubastaAsignada() == null && ic.getCatalogo().getSubasta() != null) {
+                            r.setSubastaAsignada("Subasta #" + ic.getCatalogo().getSubasta().getIdentificador());
+                        }
+                    });
+        }
 
-        if (det.getProducto() != null && det.getProducto().getSeguroNroPoliza() != null) {
-            r.setPolizaId(det.getProductoId());
+        if (r.getPolizaId() == null && det.getProducto() != null && det.getProducto().getSeguroNroPoliza() != null) {
+            r.setPolizaId(det.getProducto().getSeguroNroPoliza());
         }
         return r;
     }
@@ -404,6 +434,7 @@ public class BienService {
         d.setId(base.getId()); d.setNombre(base.getNombre()); d.setEstado(base.getEstado());
         d.setSubastaAsignada(base.getSubastaAsignada()); d.setPrecioBase(base.getPrecioBase());
         d.setComision(base.getComision()); d.setMotivoRechazo(base.getMotivoRechazo());
+        d.setCostoEnvio(base.getCostoEnvio());
         d.setUbicacionDeposito(base.getUbicacionDeposito()); d.setPolizaId(base.getPolizaId());
         d.setDescripcionTecnica(det.getProducto() != null ? det.getProducto().getDescripcionCompleta() : null);
         d.setCantidadElementos(det.getCantidadElementos());
@@ -412,6 +443,7 @@ public class BienService {
         d.setDivisaPrecioBaseSugerido(det.getDivisaPrecioBaseSugerido() != null
                 ? det.getDivisaPrecioBaseSugerido()
                 : det.getPrecioBaseSugerido() != null ? "ARS" : null);
+        d.setAceptoCondiciones(det.getAceptoCondiciones());
         int fotos = 0;
         boolean documentacionAdjunta = false;
         List<BienFotoResponse> fotosResponse = new ArrayList<>();

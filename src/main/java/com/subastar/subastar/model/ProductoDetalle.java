@@ -55,6 +55,24 @@ public class ProductoDetalle {
     @Column(name = "ubicacion_deposito")
     private String ubicacionDeposito;
 
+    @Column(name = "precio_base", precision = 18, scale = 2)
+    private BigDecimal precioBase;
+
+    @Column(name = "comision", precision = 18, scale = 2)
+    private BigDecimal comision;
+
+    @Column(name = "subasta_asignada")
+    private String subastaAsignada;
+
+    @Column(name = "poliza_id")
+    private String polizaId;
+
+    @Column(name = "costo_envio", precision = 18, scale = 2)
+    private BigDecimal costoEnvio;
+
+    @Column(name = "acepto_condiciones")
+    private Boolean aceptoCondiciones;
+
     @Column(name = "cuenta_cobro_id")
     private Integer cuentaCobroId;
 

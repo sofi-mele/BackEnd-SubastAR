@@ -2,6 +2,7 @@ package com.subastar.subastar.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -68,6 +69,12 @@ public class BienSolicitud {
 
     @Column(name = "cuenta_cobro_cbu_iban")
     private String cuentaCobroCbuIban;
+
+    @Column(name = "precio_base_sugerido")
+    private BigDecimal precioBaseSugerido;
+
+    @Column(name = "divisa_precio_base_sugerido")
+    private String divisaPrecioBaseSugerido;
 
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;

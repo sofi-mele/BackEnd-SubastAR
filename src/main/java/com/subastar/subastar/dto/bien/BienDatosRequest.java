@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -46,4 +47,10 @@ public class BienDatosRequest {
 
     @JsonProperty("cuenta_cobro_cbu_iban")
     private String cuentaCobroCbuIban;
+
+    @JsonProperty("precio_base_sugerido")
+    private BigDecimal precioBaseSugerido;
+
+    @JsonProperty("divisa_precio_base_sugerido")
+    private String divisaPrecioBaseSugerido;
 }

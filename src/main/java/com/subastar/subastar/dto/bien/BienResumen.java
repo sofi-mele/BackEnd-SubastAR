@@ -16,8 +16,12 @@ public class BienResumen {
     private BigDecimal comision;
     @JsonProperty("motivo_rechazo")
     private String motivoRechazo;
+    @JsonProperty("costo_envio")
+    private BigDecimal costoEnvio;
+    @JsonProperty("acepto_condiciones")
+    private Boolean aceptoCondiciones;
     @JsonProperty("ubicacion_deposito")
     private String ubicacionDeposito;
     @JsonProperty("poliza_id")
-    private Integer polizaId;
+    private String polizaId;
 }
