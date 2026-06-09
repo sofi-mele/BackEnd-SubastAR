@@ -21,4 +21,13 @@ public class MedioPagoVerificacionScheduler {
             medioPagoRepository.save(medio);
         }
     }
+
+    @Scheduled(fixedDelayString = "${app.scheduler.verificacion-medios-delay:10000}")
+    public void notificarMediosPagoRechazados() {
+        for (MedioPago medio : medioPagoRepository.findByRechazadoTrueAndNotificadoRechazoFalse()) {
+            notificacionService.notificarMedioPagoRechazado(medio.getCliente(), medio.getDescripcion());
+            medio.setNotificadoRechazo(true);
+            medioPagoRepository.save(medio);
+        }
+    }
 }

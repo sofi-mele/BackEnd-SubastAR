@@ -73,6 +73,12 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Se envió un nuevo código al email indicado."));
     }
 
+    @PostMapping("/registro-pendiente/cancelar")
+    public ResponseEntity<Map<String, String>> cancelarRegistro(@RequestBody Map<String, String> body) {
+        authService.cancelarRegistro(body.get("email"));
+        return ResponseEntity.ok(Map.of("message", "Registro cancelado correctamente."));
+    }
+
     @PostMapping("/recuperar-password")
     public ResponseEntity<Map<String, String>> recuperarPassword(@Valid @RequestBody RecuperarPasswordRequest req) {
         authService.solicitarRecuperacion(req);

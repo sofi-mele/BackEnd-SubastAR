@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChatMensajeRepository extends JpaRepository<ChatMensaje, Integer> {
-    List<ChatMensaje> findByClienteIdentificadorAndTipoOrderByTimestampMsgAsc(Integer clienteId, String tipo);
-    List<ChatMensaje> findByClienteIdentificadorAndTipoInOrderByTimestampMsgAsc(Integer clienteId, Collection<String> tipos);
-    List<ChatMensaje> findByClienteIdentificadorAndTipoInOrderByTimestampMsgDesc(Integer clienteId, Collection<String> tipos);
+    List<ChatMensaje> findByClienteIdentificadorAndTipoOrderByIdAsc(Integer clienteId, String tipo);
+    List<ChatMensaje> findByClienteIdentificadorAndTipoInOrderByIdAsc(Integer clienteId, Collection<String> tipos);
+    List<ChatMensaje> findByClienteIdentificadorAndTipoInOrderByIdDesc(Integer clienteId, Collection<String> tipos);
     List<ChatMensaje> findByClienteIdentificadorAndTipoInAndLeidoFalse(Integer clienteId, Collection<String> tipos);
-    Optional<ChatMensaje> findTopByClienteIdentificadorAndTipoOrderByTimestampMsgDesc(Integer clienteId, String tipo);
+    Optional<ChatMensaje> findTopByClienteIdentificadorAndTipoOrderByIdDesc(Integer clienteId, String tipo);
     int countByClienteIdentificadorAndTipoAndLeidoFalse(Integer clienteId, String tipo);
 }

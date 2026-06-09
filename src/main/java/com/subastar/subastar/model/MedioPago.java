@@ -32,6 +32,12 @@ public class MedioPago {
     @Column(name = "notificado_verificacion", nullable = false)
     private boolean notificadoVerificacion;
 
+    @Column(name = "rechazado", nullable = false)
+    private boolean rechazado;
+
+    @Column(name = "notificado_rechazo", nullable = false)
+    private boolean notificadoRechazo;
+
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 

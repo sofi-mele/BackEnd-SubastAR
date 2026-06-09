@@ -22,14 +22,26 @@ public class SeguroService {
     private final SeguroRepository seguroRepository;
     private final SeguroExtraRepository seguroExtraRepository;
     private final ProductoRepository productoRepository;
+    private final ProductoDetalleRepository productoDetalleRepository;
     private final CredencialRepository credencialRepository;
     private final ClienteRepository clienteRepository;
 
     public List<PolizaResponse> listarMisPolizas(String email) {
         Integer clienteId = getClienteId(email);
-        return seguroExtraRepository.findByBeneficiarioId(clienteId).stream()
-                .map(extra -> seguroRepository.findById(extra.getPolizaId())
-                        .map(seguro -> toPolizaResponse(seguro, extra, clienteId))
+
+        // Pólizas como comprador (beneficiario en seguros_extra)
+        java.util.Set<String> polizasIds = new java.util.LinkedHashSet<>();
+        java.util.Map<String, SeguroExtra> extrasMap = new java.util.LinkedHashMap<>();
+        seguroExtraRepository.findByBeneficiarioId(clienteId)
+                .forEach(e -> { polizasIds.add(e.getPolizaId()); extrasMap.put(e.getPolizaId(), e); });
+
+        // Pólizas como dueño de un bien publicado (productos_detalle.poliza_id)
+        productoDetalleRepository.findByClienteIdAndPolizaIdIsNotNull(clienteId)
+                .forEach(det -> polizasIds.add(det.getPolizaId()));
+
+        return polizasIds.stream()
+                .map(polizaId -> seguroRepository.findById(polizaId)
+                        .map(seguro -> toPolizaResponse(seguro, extrasMap.get(polizaId), clienteId))
                         .orElse(null))
                 .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.toList());
@@ -52,8 +64,7 @@ public class SeguroService {
                 .orElseThrow(() -> new ResourceNotFoundException("Póliza no encontrada"));
         SeguroExtra extra = seguroExtraRepository.findById(polizaId).orElse(null);
 
-        boolean esDuenioDePoliza = productoRepository.findByDuenioIdentificador(clienteId).stream()
-                .anyMatch(p -> p.getSeguroNroPoliza() != null && p.getSeguroNroPoliza().equalsIgnoreCase(polizaId));
+        boolean esDuenioDePoliza = productoDetalleRepository.existsByClienteIdAndPolizaId(clienteId, polizaId);
 
         // Autoasigna beneficiario cuando aún no fue definido, solo si el usuario es dueño de un bien con esta póliza.
         if (extra == null) {

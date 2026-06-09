@@ -53,7 +53,7 @@ public class ChatService {
             });
 
             chatMensajeRepository
-                    .findTopByClienteIdentificadorAndTipoOrderByTimestampMsgDesc(clienteId, tipo)
+                    .findTopByClienteIdentificadorAndTipoOrderByIdDesc(clienteId, tipo)
                     .ifPresentOrElse(
                             m -> c.setSubtitulo(resumir(m.getContenido())),
                             () -> c.setSubtitulo("")
@@ -76,11 +76,11 @@ public class ChatService {
     public List<MensajeChatResponse> getMensajes(String email, String tipo) {
         Integer clienteId = getClienteId(email);
         List<ChatMensaje> mensajes = "notificaciones".equals(tipo)
-                ? chatMensajeRepository.findByClienteIdentificadorAndTipoInOrderByTimestampMsgAsc(clienteId, TIPOS_NOTIFICACION)
+                ? chatMensajeRepository.findByClienteIdentificadorAndTipoInOrderByIdAsc(clienteId, TIPOS_NOTIFICACION)
                     .stream()
                     .filter(this::esEntrante)
                     .toList()
-                : chatMensajeRepository.findByClienteIdentificadorAndTipoOrderByTimestampMsgAsc(clienteId, tipo);
+                : chatMensajeRepository.findByClienteIdentificadorAndTipoOrderByIdAsc(clienteId, tipo);
 
         marcarComoLeidos(mensajes);
 
@@ -159,7 +159,7 @@ public class ChatService {
 
     private List<ChatMensaje> getNotificacionesEntrantes(Integer clienteId) {
         return chatMensajeRepository
-                .findByClienteIdentificadorAndTipoInOrderByTimestampMsgDesc(clienteId, TIPOS_NOTIFICACION)
+                .findByClienteIdentificadorAndTipoInOrderByIdDesc(clienteId, TIPOS_NOTIFICACION)
                 .stream()
                 .filter(this::esEntrante)
                 .toList();

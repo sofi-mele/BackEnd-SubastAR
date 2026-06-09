@@ -230,6 +230,12 @@ public class AuthService {
     }
 
     @Transactional
+    public void cancelarRegistro(String email) {
+        registroPendienteRepository.findByEmail(email)
+                .ifPresent(registroPendienteRepository::delete);
+    }
+
+    @Transactional
     public void solicitarRecuperacion(RecuperarPasswordRequest req) {
         Credencial credencial = credencialRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));

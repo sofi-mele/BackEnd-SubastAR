@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 @Service
 @Transactional
@@ -21,9 +23,9 @@ public class NotificacionService {
         BigDecimal totalComision = comision != null ? comision : BigDecimal.ZERO;
         BigDecimal total = importePujado.add(totalComision);
         String contenido = "¡Ganaste el ítem \"" + nombreItem + "\"!\n"
-                + "Importe ofertado: $" + importePujado + "\n"
-                + "Comisión: $" + totalComision + "\n"
-                + "Total a pagar: $" + total + "\n"
+                + "Importe ofertado: $" + formatMonto(importePujado) + "\n"
+                + "Comisión: $" + formatMonto(totalComision) + "\n"
+                + "Total a pagar: $" + formatMonto(total) + "\n"
                 + "El costo de envío a tu dirección declarada se calculará al momento de procesar la entrega.\n"
                 + "Podés regularizar tu pago desde 'Mis compras'.";
         enviar(cliente, "compra", contenido);
@@ -31,12 +33,12 @@ public class NotificacionService {
 
     public void notificarPagoRegularizado(Cliente cliente, String nombreItem, BigDecimal total) {
         String contenido = "Tu pago por el ítem \"" + nombreItem + "\" fue registrado correctamente.\n"
-                + "Total abonado: $" + total;
+                + "Total abonado: $" + formatMonto(total);
         enviar(cliente, "bot", contenido);
     }
 
     public void notificarPujaRegistrada(Cliente cliente, String nombreItem, BigDecimal monto) {
-        String contenido = "Tu puja de $" + monto + " por el ítem \"" + nombreItem + "\" fue registrada exitosamente.";
+        String contenido = "Tu puja de $" + formatMonto(monto) + " por el ítem \"" + nombreItem + "\" fue registrada exitosamente.";
         enviar(cliente, "bot", contenido);
     }
 
@@ -55,6 +57,12 @@ public class NotificacionService {
         enviar(cliente, "bot", contenido);
     }
 
+    public void notificarMedioPagoRechazado(Cliente cliente, String descripcion) {
+        String contenido = "Tu medio de pago \"" + descripcion + "\" no fue aprobado por la empresa.\n"
+                + "Podés agregar otro medio de pago desde tu perfil.";
+        enviar(cliente, "bot", contenido);
+    }
+
     public void notificarBienConfirmado(Cliente cliente, String nombreBien) {
         String contenido = "Tu bien \"" + nombreBien + "\" fue recibido y está siendo revisado por nuestro equipo.\n"
                 + "Te notificaremos cuando tengamos novedades.";
@@ -69,7 +77,7 @@ public class NotificacionService {
     }
 
     public void notificarMulta(Cliente cliente, BigDecimal monto, String motivo) {
-        String contenido = "Se te aplicó una multa de $" + monto + ".\n"
+        String contenido = "Se te aplicó una multa de $" + formatMonto(monto) + ".\n"
                 + "Motivo: " + motivo + "\n"
                 + "Debés regularizarla antes de participar en otra subasta.";
         enviar(cliente, "multa", contenido);
@@ -77,14 +85,14 @@ public class NotificacionService {
 
     public void notificarDevolucion(Cliente cliente, String nombreBien, BigDecimal costoDevolucion) {
         String contenido = "Rechazaste las condiciones para el bien \"" + nombreBien + "\".\n"
-                + "El bien será devuelto a tu dirección con un costo de devolución de $" + costoDevolucion + ".\n"
+                + "El bien será devuelto a tu dirección con un costo de devolución de $" + formatMonto(costoDevolucion) + ".\n"
                 + "Deberás abonar este monto para recibir tu bien.";
         enviar(cliente, "bien", contenido);
     }
 
     public void notificarBienAceptado(Cliente cliente, String nombreBien, BigDecimal precioBase) {
         String contenido = "Tu bien \"" + nombreBien + "\" fue aceptado para subasta.\n"
-                + "Precio base: $" + precioBase + "\n"
+                + "Precio base: $" + formatMonto(precioBase) + "\n"
                 + "Revisá los detalles en 'Mis bienes'.";
         enviar(cliente, "bien", contenido);
     }
@@ -101,6 +109,14 @@ public class NotificacionService {
                 + "Para continuar, traelo a nuestro depósito: Corrientes 2300, CABA (lun-vie 9-17 hs).\n"
                 + "Importante: si tras la inspección presencial no es aceptado, el costo de devolución corre por tu cuenta.";
         enviar(cliente, "bien", contenido);
+    }
+
+    private String formatMonto(BigDecimal monto) {
+        if (monto == null) return "0";
+        NumberFormat fmt = NumberFormat.getNumberInstance(Locale.of("es", "AR"));
+        fmt.setMaximumFractionDigits(2);
+        fmt.setMinimumFractionDigits(0);
+        return fmt.format(monto.stripTrailingZeros());
     }
 
     private void enviar(Cliente cliente, String tipo, String contenido) {

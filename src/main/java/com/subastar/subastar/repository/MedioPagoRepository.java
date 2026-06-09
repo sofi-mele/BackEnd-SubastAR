@@ -10,4 +10,5 @@ public interface MedioPagoRepository extends JpaRepository<MedioPago, Integer> {
     List<MedioPago> findByClienteIdentificadorAndEliminadoFalse(Integer clienteId);
     Optional<MedioPago> findByIdAndClienteIdentificadorAndEliminadoFalse(Integer id, Integer clienteId);
     List<MedioPago> findByVerificadoTrueAndEliminadoFalseAndNotificadoVerificacionFalse();
+    List<MedioPago> findByRechazadoTrueAndNotificadoRechazoFalse();
 }

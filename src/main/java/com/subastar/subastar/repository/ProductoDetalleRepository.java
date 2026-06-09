@@ -8,4 +8,6 @@ import java.util.List;
 public interface ProductoDetalleRepository extends JpaRepository<ProductoDetalle, Integer> {
     List<ProductoDetalle> findByClienteId(Integer clienteId);
     List<ProductoDetalle> findByClienteIdAndEstadoSolicitud(Integer clienteId, String estado);
+    boolean existsByClienteIdAndPolizaId(Integer clienteId, String polizaId);
+    List<ProductoDetalle> findByClienteIdAndPolizaIdIsNotNull(Integer clienteId);
 }

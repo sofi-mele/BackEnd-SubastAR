@@ -97,8 +97,6 @@ public class BienService {
         sol.setPasoActual("fotos");
         bienSolicitudRepository.save(sol);
 
-        notificacionService.notificarSolicitudBienCargada(sol.getCliente(), sol.getNombre());
-
         return toResponse(sol);
     }
 
@@ -375,11 +373,10 @@ public class BienService {
             Cliente cliente = clienteRepository.findById(clienteId)
                     .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
 
-            java.math.BigDecimal costoDev = itemCatalogoRepository.findAll().stream()
-                    .filter(ic -> ic.getProducto().getIdentificador().equals(productoId))
-                    .findFirst()
-                    .map(ic -> ic.getPrecioBase().multiply(java.math.BigDecimal.valueOf(0.10)))
-                    .orElse(java.math.BigDecimal.ZERO);
+            java.math.BigDecimal base = det.getPrecioBase() != null ? det.getPrecioBase() : det.getPrecioBaseSugerido();
+            java.math.BigDecimal costoDev = base != null
+                    ? base.multiply(java.math.BigDecimal.valueOf(0.10))
+                    : java.math.BigDecimal.ZERO;
 
             notificacionService.notificarDevolucion(cliente, det.getNombre(), costoDev);
         } else if (req.getCuentaCobroId() != null) {
