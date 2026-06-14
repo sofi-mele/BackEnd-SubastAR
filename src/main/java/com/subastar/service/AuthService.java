@@ -13,6 +13,8 @@ import com.subastar.model.*;
 import com.subastar.repository.*;
 import com.subastar.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final RegistroPendienteRepository registroPendienteRepository;
@@ -192,6 +195,7 @@ public class AuthService {
 
     @Transactional
     public void aprobarRegistro(Integer id) {
+        log.info("Iniciando aprobacion de registro pendiente id={}", id);
         RegistroPendiente registro = registroPendienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro pendiente no encontrado"));
 
@@ -200,12 +204,40 @@ public class AuthService {
         }
 
         String codigo = String.format("%04d", new Random().nextInt(10000));
+        log.info("Codigo de aprobacion generado para registro pendiente id={}", id);
         registro.setEstado("aprobado");
         registro.setCodigoVerificacion(codigo);
         registro.setCodigoExpiresAt(LocalDateTime.now().plusHours(24));
         registroPendienteRepository.save(registro);
+        log.info("Registro pendiente id={} aprobado y persistido sin envio de email", id);
+    }
 
-        emailService.enviarNotificacionAprobacion(registro.getEmail(), codigo);
+    @Transactional(readOnly = true)
+    public void enviarCodigoAprobacion(Integer id) {
+        log.info("Intentando enviar codigo de aprobacion para registro pendiente id={}", id);
+        RegistroPendiente registro = registroPendienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Registro pendiente no encontrado"));
+
+        if (!"aprobado".equals(registro.getEstado())) {
+            throw new BadRequestException("El registro debe estar aprobado para enviar el codigo");
+        }
+        if (registro.getCodigoVerificacion() == null || registro.getCodigoVerificacion().isBlank()) {
+            throw new BadRequestException("El registro no tiene codigo de aprobacion generado");
+        }
+        if (registro.getCodigoExpiresAt() == null) {
+            throw new BadRequestException("El registro no tiene vencimiento de codigo configurado");
+        }
+        if (LocalDateTime.now().isAfter(registro.getCodigoExpiresAt())) {
+            throw new BadRequestException("El codigo de aprobacion expiro. Aprobar/regenerar el codigo nuevamente.");
+        }
+
+        try {
+            emailService.enviarNotificacionAprobacion(registro.getEmail(), registro.getCodigoVerificacion());
+            log.info("Codigo de aprobacion enviado correctamente para registro pendiente id={}", id);
+        } catch (MailException ex) {
+            log.error("Fallo el envio del codigo de aprobacion para registro pendiente id={}: {}", id, ex.getMessage(), ex);
+            throw new BadRequestException("No se pudo enviar el codigo de aprobacion por email. Revise la configuracion SMTP e intente nuevamente.");
+        }
     }
 
     @Transactional

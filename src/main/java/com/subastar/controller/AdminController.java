@@ -21,7 +21,17 @@ public class AdminController {
     @PostMapping("/registros/{id}/aprobar")
     public ResponseEntity<Map<String, String>> aprobarRegistro(@PathVariable Integer id) {
         authService.aprobarRegistro(id);
-        return ResponseEntity.ok(Map.of("message", "Registro aprobado. Se envió el código al usuario por email."));
+        return ResponseEntity.ok(Map.of(
+                "message", "Registro aprobado. Codigo generado correctamente. Use el endpoint de envio para mandar el email."
+        ));
+    }
+
+    @PostMapping("/registros/{id}/enviar-codigo-aprobacion")
+    public ResponseEntity<Map<String, String>> enviarCodigoAprobacion(@PathVariable Integer id) {
+        authService.enviarCodigoAprobacion(id);
+        return ResponseEntity.ok(Map.of(
+                "message", "Codigo de aprobacion enviado por email correctamente."
+        ));
     }
 
     @PostMapping("/bienes/{id}/rechazar")
