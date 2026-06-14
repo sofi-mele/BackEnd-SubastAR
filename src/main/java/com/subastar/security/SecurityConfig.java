@@ -52,7 +52,11 @@ public class SecurityConfig {
                         "/auth/completar-registro", "/auth/login", "/auth/reenviar-codigo",
                         "/auth/recuperar-password", "/auth/recuperar-password/confirmar",
                         "/auth/registro-pendiente/cancelar").permitAll()
-                .requestMatchers(HttpMethod.POST, "/admin/registros/*/aprobar").permitAll()
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/admin/registros/*/aprobar",
+                        "/admin/registros/*/enviar-codigo-aprobacion"
+                ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/subastas/*/resultado/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/subastas", "/subastas/**", "/fotos/**", "/paises", "/divisas").permitAll()
                 .anyRequest().authenticated()
