@@ -73,36 +73,16 @@ public class EmailService {
         validarConfiguracion();
         log.info("Intentando enviar email con Gmail API to={} subject={}", to, subject);
 
+        String accessToken = obtenerAccessToken();
+        String rawMessage;
         try {
-            String accessToken = obtenerAccessToken();
-            String rawMessage = crearMensajeMime(to, subject, text);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(accessToken);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            ResponseEntity<String> response = restTemplateBuilder.build().postForEntity(
-                    GMAIL_SEND_URL,
-                    new HttpEntity<>(new GmailMessageRequest(rawMessage), headers),
-                    String.class
-            );
-
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new MailSendException("Gmail API devolvio un error: " + response.getStatusCode());
-            }
-
-            log.info("Email enviado correctamente con Gmail API to={} subject={}", to, subject);
-        } catch (RestClientResponseException ex) {
-            log.error("Gmail API respondio con error status={} body={}",
-                    ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-            throw new MailSendException("Gmail API devolvio un error HTTP " + ex.getStatusCode().value(), ex);
-        } catch (RestClientException ex) {
-            log.error("No se pudo conectar con Gmail API: {}", ex.getMessage(), ex);
-            throw new MailSendException("No se pudo conectar con Gmail API", ex);
+            rawMessage = crearMensajeMime(to, subject, text);
         } catch (MessagingException | IOException ex) {
-            log.error("No se pudo construir el email para Gmail API: {}", ex.getMessage(), ex);
+            log.error("No se pudo construir el email MIME to={} subject={}: {}", to, subject, ex.getMessage(), ex);
             throw new MailSendException("No se pudo construir el email", ex);
         }
+
+        enviarMensajeGmail(accessToken, rawMessage, to, subject);
     }
 
     private String obtenerAccessToken() {
@@ -115,19 +95,60 @@ public class EmailService {
         form.add("refresh_token", refreshToken);
         form.add("grant_type", "refresh_token");
 
-        ResponseEntity<GmailTokenResponse> response = restTemplateBuilder.build().postForEntity(
-                GOOGLE_TOKEN_URL,
-                new HttpEntity<>(form, headers),
-                GmailTokenResponse.class
-        );
+        try {
+            ResponseEntity<GmailTokenResponse> response = restTemplateBuilder.build().postForEntity(
+                    GOOGLE_TOKEN_URL,
+                    new HttpEntity<>(form, headers),
+                    GmailTokenResponse.class
+            );
 
-        GmailTokenResponse tokenResponse = response.getBody();
-        if (!response.getStatusCode().is2xxSuccessful()
-                || tokenResponse == null
-                || !StringUtils.hasText(tokenResponse.accessToken())) {
-            throw new MailSendException("Google OAuth no devolvio un access token valido");
+            GmailTokenResponse tokenResponse = response.getBody();
+            if (!response.getStatusCode().is2xxSuccessful()
+                    || tokenResponse == null
+                    || !StringUtils.hasText(tokenResponse.accessToken())) {
+                log.error("Google OAuth devolvio una respuesta invalida endpoint={} status={}",
+                        GOOGLE_TOKEN_URL, response.getStatusCode());
+                throw new MailSendException("Google OAuth no devolvio un access token valido");
+            }
+            return tokenResponse.accessToken();
+        } catch (RestClientResponseException ex) {
+            log.error("Google OAuth respondio con error endpoint={} status={} body={}",
+                    GOOGLE_TOKEN_URL, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new MailSendException("Google OAuth devolvio un error HTTP " + ex.getStatusCode().value(), ex);
+        } catch (RestClientException ex) {
+            log.error("No se pudo conectar con Google OAuth endpoint={}: {}", GOOGLE_TOKEN_URL, ex.getMessage(), ex);
+            throw new MailSendException("No se pudo conectar con Google OAuth", ex);
         }
-        return tokenResponse.accessToken();
+    }
+
+    private void enviarMensajeGmail(String accessToken, String rawMessage, String to, String subject) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        try {
+            ResponseEntity<String> response = restTemplateBuilder.build().postForEntity(
+                    GMAIL_SEND_URL,
+                    new HttpEntity<>(new GmailMessageRequest(rawMessage), headers),
+                    String.class
+            );
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                log.error("Gmail API devolvio error endpoint={} status={} body={} to={} subject={}",
+                        GMAIL_SEND_URL, response.getStatusCode(), response.getBody(), to, subject);
+                throw new MailSendException("Gmail API devolvio un error HTTP " + response.getStatusCode().value());
+            }
+
+            log.info("Email enviado correctamente con Gmail API to={} subject={}", to, subject);
+        } catch (RestClientResponseException ex) {
+            log.error("Gmail API respondio con error endpoint={} status={} body={} to={} subject={}",
+                    GMAIL_SEND_URL, ex.getStatusCode(), ex.getResponseBodyAsString(), to, subject, ex);
+            throw new MailSendException("Gmail API devolvio un error HTTP " + ex.getStatusCode().value(), ex);
+        } catch (RestClientException ex) {
+            log.error("No se pudo conectar con Gmail API endpoint={} to={} subject={}: {}",
+                    GMAIL_SEND_URL, to, subject, ex.getMessage(), ex);
+            throw new MailSendException("No se pudo conectar con Gmail API", ex);
+        }
     }
 
     private String crearMensajeMime(String to, String subject, String text) throws MessagingException, IOException {
@@ -135,7 +156,9 @@ public class EmailService {
         message.setFrom(new InternetAddress(gmailFrom));
         message.setRecipient(Message.RecipientType.TO, new InternetAddress(to));
         message.setSubject(subject, StandardCharsets.UTF_8.name());
-        message.setText(text, StandardCharsets.UTF_8.name());
+        message.setText(text, StandardCharsets.UTF_8.name(), "plain");
+        message.setHeader("MIME-Version", "1.0");
+        message.setHeader("Content-Type", "text/plain; charset=UTF-8");
         message.setSentDate(new Date());
         message.saveChanges();
 
