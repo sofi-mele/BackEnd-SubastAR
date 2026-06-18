@@ -4,6 +4,7 @@ import com.subastar.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.mail.MailException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -91,6 +92,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNumberFormat(NumberFormatException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(400, "El valor numérico ingresado no es válido"));
+    }
+
+    @ExceptionHandler(MailException.class)
+    public ResponseEntity<ErrorResponse> handleMailException(MailException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ErrorResponse(502, ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

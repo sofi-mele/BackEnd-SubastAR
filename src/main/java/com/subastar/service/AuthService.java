@@ -17,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -41,6 +43,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional
     public void registroStep1(RegistroStep1Request req, MultipartFile dniFrente, MultipartFile dniDorso) {
@@ -236,7 +239,7 @@ public class AuthService {
             log.info("Codigo de aprobacion enviado correctamente para registro pendiente id={}", id);
         } catch (MailException ex) {
             log.error("Fallo el envio del codigo de aprobacion para registro pendiente id={}: {}", id, ex.getMessage(), ex);
-            throw new BadRequestException("No se pudo enviar el codigo de aprobacion por email. Revise la configuracion SMTP e intente nuevamente.");
+            throw new BadRequestException("No se pudo enviar el codigo de aprobacion por email. Revise la configuracion de Gmail API e intente nuevamente.");
         }
     }
 
@@ -267,15 +270,22 @@ public class AuthService {
                 .ifPresent(registroPendienteRepository::delete);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void solicitarRecuperacion(RecuperarPasswordRequest req) {
-        Credencial credencial = credencialRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        String token = transactionTemplate.execute(status -> {
+            Credencial credencial = credencialRepository.findByEmail(req.getEmail())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        String token = UUID.randomUUID().toString();
-        credencial.setResetToken(token);
-        credencial.setResetTokenExpiresAt(LocalDateTime.now().plusHours(1));
-        credencialRepository.save(credencial);
+            String nuevoToken = UUID.randomUUID().toString();
+            credencial.setResetToken(nuevoToken);
+            credencial.setResetTokenExpiresAt(LocalDateTime.now().plusHours(1));
+            credencialRepository.save(credencial);
+            return nuevoToken;
+        });
+
+        if (token == null) {
+            throw new IllegalStateException("No se pudo generar el token de recuperacion");
+        }
 
         emailService.enviarTokenRecuperacion(req.getEmail(), token);
     }
