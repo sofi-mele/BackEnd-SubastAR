@@ -11,6 +11,8 @@ import java.util.List;
 public interface MultaRepository extends JpaRepository<Multa, Integer> {
     List<Multa> findByClienteIdentificadorAndEstado(Integer clienteId, String estado);
 
+    boolean existsByRegistroId(Integer registroId);
+
     @Query("SELECT COALESCE(SUM(m.monto), 0) FROM Multa m WHERE m.cliente.identificador = :clienteId AND m.estado = 'pendiente'")
     BigDecimal sumMultasPendientesByClienteId(@Param("clienteId") Integer clienteId);
 }

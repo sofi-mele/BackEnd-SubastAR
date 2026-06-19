@@ -76,6 +76,13 @@ public class CompraService {
         extra.setMedioPagoId(req.getMedioPagoId());
         extra.setEstadoPago("pagado");
         compraExtraRepository.save(extra);
+
+        List<Multa> multasPendientes = multaRepository.findByClienteIdentificadorAndEstado(clienteId, "pendiente");
+        for (Multa multa : multasPendientes) {
+            multa.setEstado("cancelada");
+            multaRepository.save(multa);
+        }
+
         medioPagoService.recalcularCategoria(clienteId);
 
         // M-10: notificar al cliente que su pago fue registrado
