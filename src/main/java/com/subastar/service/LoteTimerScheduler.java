@@ -26,9 +26,9 @@ public class LoteTimerScheduler {
                 LocalDateTime ahora = LocalDateTime.now();
                 boolean vencido;
                 if (extra.getFechaUltimaPuja() != null) {
-                    vencido = ahora.isAfter(extra.getFechaUltimaPuja().plusSeconds(20));
+                    vencido = ahora.isAfter(extra.getFechaUltimaPuja().plusSeconds(60));
                 } else {
-                    vencido = ahora.isAfter(extra.getFechaInicioLote().plusSeconds(60));
+                    vencido = ahora.isAfter(extra.getFechaInicioLote().plusSeconds(120));
                 }
                 if (vencido) {
                     log.info("Timer vencido para subasta={}, cerrando lote", extra.getSubastaId());
