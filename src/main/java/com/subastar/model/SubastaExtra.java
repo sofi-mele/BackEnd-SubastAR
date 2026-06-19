@@ -2,6 +2,7 @@ package com.subastar.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -22,6 +23,12 @@ public class SubastaExtra {
 
     @Column(name = "item_actual_id")
     private Integer itemActualId;
+
+    @Column(name = "fecha_inicio_lote")
+    private LocalDateTime fechaInicioLote;
+
+    @Column(name = "fecha_ultima_puja")
+    private LocalDateTime fechaUltimaPuja;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subasta_id", insertable = false, updatable = false)

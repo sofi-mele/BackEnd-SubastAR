@@ -104,6 +104,18 @@ public class SubastaService {
                 resp.setPujaMinima(calcularPujaMinima(precioBase, mejorOferta));
                 resp.setPujaMaxima(calcularPujaMaxima(precioBase, mejorOferta));
 
+                Integer segundosRestantes = null;
+                if (extra.getFechaInicioLote() != null) {
+                    LocalDateTime ahora = LocalDateTime.now();
+                    LocalDateTime referencia = extra.getFechaUltimaPuja() != null
+                            ? extra.getFechaUltimaPuja()
+                            : extra.getFechaInicioLote();
+                    long limite = extra.getFechaUltimaPuja() != null ? 20 : 60;
+                    long transcurridos = java.time.Duration.between(referencia, ahora).getSeconds();
+                    segundosRestantes = (int) Math.max(0, limite - transcurridos);
+                }
+                resp.setSegundosRestantes(segundosRestantes);
+
                 List<PujaResumen> historial = pujoRepository
                         .findByItemIdentificadorOrderByIdentificadorDesc(itemActual.getIdentificador())
                         .stream().map(this::toPujaResumen).collect(Collectors.toList());

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SubastaExtraRepository extends JpaRepository<SubastaExtra, Integer> {
@@ -15,4 +16,7 @@ public interface SubastaExtraRepository extends JpaRepository<SubastaExtra, Inte
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT se FROM SubastaExtra se WHERE se.subastaId = :subastaId")
     Optional<SubastaExtra> findBySubastaIdWithLock(@Param("subastaId") Integer subastaId);
+
+    @Query("SELECT se FROM SubastaExtra se WHERE se.subasta.estado = 'abierta' AND se.itemActualId IS NOT NULL AND se.fechaInicioLote IS NOT NULL")
+    List<SubastaExtra> findActiveTimers();
 }

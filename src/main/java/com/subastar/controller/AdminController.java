@@ -1,6 +1,8 @@
 package com.subastar.controller;
 
 import com.subastar.dto.bien.RechazarBienRequest;
+import com.subastar.model.SubastaExtra;
+import com.subastar.repository.SubastaExtraRepository;
 import com.subastar.service.AuthService;
 import com.subastar.service.BienService;
 import jakarta.validation.Valid;
@@ -8,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -17,6 +20,7 @@ public class AdminController {
 
     private final AuthService authService;
     private final BienService bienService;
+    private final SubastaExtraRepository subastaExtraRepository;
 
     @PostMapping("/registros/{id}/aprobar")
     public ResponseEntity<Map<String, String>> aprobarRegistro(@PathVariable Integer id) {
@@ -40,5 +44,15 @@ public class AdminController {
             @Valid @RequestBody RechazarBienRequest req) {
         bienService.rechazarBien(id, req.getMotivo());
         return ResponseEntity.ok(Map.of("message", "Bien rechazado y notificación enviada al usuario."));
+    }
+
+    @PostMapping("/subastas/{subastaId}/iniciar-lote")
+    public ResponseEntity<Map<String, Object>> iniciarLote(@PathVariable Integer subastaId) {
+        SubastaExtra extra = subastaExtraRepository.findBySubastaId(subastaId)
+                .orElseThrow(() -> new com.subastar.exception.ResourceNotFoundException("Subasta no encontrada"));
+        extra.setFechaInicioLote(LocalDateTime.now());
+        extra.setFechaUltimaPuja(null);
+        subastaExtraRepository.save(extra);
+        return ResponseEntity.ok(Map.of("message", "Timer iniciado", "segundosRestantes", 60));
     }
 }
