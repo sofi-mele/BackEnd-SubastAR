@@ -104,6 +104,12 @@ public class SubastaService {
                 resp.setPujaMinima(calcularPujaMinima(precioBase, mejorOferta));
                 resp.setPujaMaxima(calcularPujaMaxima(precioBase, mejorOferta));
 
+                if (extra.getFechaInicioLote() == null) {
+                    extra.setFechaInicioLote(LocalDateTime.now());
+                    extra.setFechaUltimaPuja(null);
+                    subastaExtraRepository.save(extra);
+                }
+
                 Integer segundosRestantes = null;
                 if (extra.getFechaInicioLote() != null) {
                     LocalDateTime ahora = LocalDateTime.now();
