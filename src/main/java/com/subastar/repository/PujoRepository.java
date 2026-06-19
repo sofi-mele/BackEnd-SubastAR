@@ -32,4 +32,16 @@ public interface PujoRepository extends JpaRepository<Pujo, Integer> {
           AND p.ganador = 'si'
         """)
     Optional<Pujo> findGanadorByItemId(@Param("itemId") Integer itemId);
+
+    @Query("""
+        SELECT p FROM Pujo p
+        WHERE p.asistente.cliente.identificador = :clienteId
+          AND EXISTS (
+              SELECT p2 FROM Pujo p2
+              WHERE p2.item.identificador = p.item.identificador
+                AND p2.ganador = 'si'
+                AND p2.asistente.cliente.identificador <> :clienteId
+          )
+        """)
+    List<Pujo> findParticipacionesPerdidas(@Param("clienteId") Integer clienteId);
 }

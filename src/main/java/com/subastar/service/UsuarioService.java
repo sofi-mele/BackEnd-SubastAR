@@ -10,8 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -145,6 +147,66 @@ public class UsuarioService {
         resp.setOfertaMasBaja(ofertaMasBaja);
         resp.setGanadasPorMes(ganadasPorMes);
         return resp;
+    }
+
+    public List<ParticipacionPerdidaResponse> getParticipacionesPerdidas(String email) {
+        Credencial cred = credencialRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        Integer clienteId = cred.getPersonaId();
+
+        List<Pujo> pujas = pujoRepository.findParticipacionesPerdidas(clienteId);
+
+        Map<Integer, List<Pujo>> porItem = pujas.stream()
+                .collect(Collectors.groupingBy(p -> p.getItem().getIdentificador()));
+
+        List<ParticipacionPerdidaResponse> result = new ArrayList<>();
+
+        for (Map.Entry<Integer, List<Pujo>> entry : porItem.entrySet()) {
+            Integer itemId = entry.getKey();
+            List<Pujo> pujasItem = entry.getValue();
+
+            Pujo mejorPuja = pujasItem.stream()
+                    .max(Comparator.comparing(Pujo::getImporte))
+                    .orElse(null);
+            if (mejorPuja == null) continue;
+
+            LocalDateTime fechaPuja = pujoExtraRepository.findByPujoId(mejorPuja.getIdentificador())
+                    .map(PujoExtra::getTimestampPuja)
+                    .orElse(null);
+
+            Pujo ganador = pujoRepository.findGanadorByItemId(itemId).orElse(null);
+
+            ItemCatalogo item = mejorPuja.getItem();
+            Producto producto = item.getProducto();
+
+            BigDecimal precioFinalVenta = null;
+            String nombreGanador = null;
+            if (ganador != null) {
+                precioFinalVenta = ganador.getImporte();
+                Persona persona = ganador.getAsistente().getCliente().getPersona();
+                if (persona != null) nombreGanador = persona.getNombre();
+            }
+
+            Integer subastaId = item.getCatalogo() != null && item.getCatalogo().getSubasta() != null
+                    ? item.getCatalogo().getSubasta().getIdentificador() : null;
+
+            result.add(ParticipacionPerdidaResponse.builder()
+                    .itemId(itemId)
+                    .nombreProducto(producto != null ? producto.getDescripcionCatalogo() : null)
+                    .descripcion(producto != null ? producto.getDescripcionCompleta() : null)
+                    .precioBase(item.getPrecioBase())
+                    .miMejorPuja(mejorPuja.getImporte())
+                    .precioFinalVenta(precioFinalVenta)
+                    .nombreGanador(nombreGanador)
+                    .fechaPuja(fechaPuja)
+                    .subastaId(subastaId)
+                    .build());
+        }
+
+        result.sort(Comparator.comparing(ParticipacionPerdidaResponse::getFechaPuja,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+
+        return result;
     }
 
     private UsuarioDetalle buildDetalle(Cliente cliente, String email) {

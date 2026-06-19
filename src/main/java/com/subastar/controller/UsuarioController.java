@@ -4,6 +4,7 @@ import com.subastar.dto.cuentaCobro.CuentaCobroRequest;
 import com.subastar.dto.cuentaCobro.CuentaCobroResponse;
 import com.subastar.dto.medioPago.*;
 import com.subastar.dto.usuario.*;
+import com.subastar.dto.usuario.ParticipacionPerdidaResponse;
 import com.subastar.service.CuentaCobroService;
 import com.subastar.service.MedioPagoService;
 import com.subastar.service.UsuarioService;
@@ -47,6 +48,12 @@ public class UsuarioController {
     @GetMapping("/me/metricas")
     public ResponseEntity<MetricasResponse> getMetricas(@AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(usuarioService.getMetricas(user.getUsername()));
+    }
+
+    @GetMapping("/me/participaciones-perdidas")
+    public ResponseEntity<List<ParticipacionPerdidaResponse>> getParticipacionesPerdidas(
+            @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(usuarioService.getParticipacionesPerdidas(user.getUsername()));
     }
 
     // ── Cuentas de cobro ──
