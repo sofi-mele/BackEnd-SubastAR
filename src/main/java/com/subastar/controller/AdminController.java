@@ -1,5 +1,6 @@
 package com.subastar.controller;
 
+import com.subastar.dto.bien.AceptarBienRequest;
 import com.subastar.dto.bien.RechazarBienRequest;
 import com.subastar.model.SubastaExtra;
 import com.subastar.repository.SubastaExtraRepository;
@@ -36,6 +37,14 @@ public class AdminController {
         return ResponseEntity.ok(Map.of(
                 "message", "Codigo de aprobacion enviado por email correctamente."
         ));
+    }
+
+    @PostMapping("/bienes/{id}/aceptar")
+    public ResponseEntity<Map<String, String>> aceptarBien(
+            @PathVariable Integer id,
+            @Valid @RequestBody AceptarBienRequest req) {
+        bienService.aceptarBien(id, req);
+        return ResponseEntity.ok(Map.of("message", "Bien aceptado correctamente."));
     }
 
     @PostMapping("/bienes/{id}/rechazar")

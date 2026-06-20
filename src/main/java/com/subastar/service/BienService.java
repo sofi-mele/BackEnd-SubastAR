@@ -360,6 +360,21 @@ public class BienService {
     }
 
     @Transactional
+    public void aceptarBien(Integer productoId, AceptarBienRequest req) {
+        ProductoDetalle det = productoDetalleRepository.findById(productoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
+        det.setEstadoSolicitud("aceptado");
+        det.setPrecioBase(req.getPrecioBase());
+        det.setComision(req.getComision());
+        det.setCostoEnvio(req.getCostoEnvio());
+        productoDetalleRepository.save(det);
+
+        Cliente cliente = clienteRepository.findById(det.getClienteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        notificacionService.notificarBienAceptado(cliente, det.getNombre(), det.getPrecioBase());
+    }
+
+    @Transactional
     public void aceptarCondiciones(String email, Integer productoId, AceptarCondicionesRequest req) {
         Integer clienteId = getClienteId(email);
         ProductoDetalle det = productoDetalleRepository.findById(productoId)
