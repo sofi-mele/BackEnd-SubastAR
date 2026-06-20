@@ -39,6 +39,7 @@ public class PujaService {
     private final TarjetaCreditoRepository tarjetaCreditoRepository;
     private final NotificacionService notificacionService;
     private final ApplicationEventPublisher eventPublisher;
+    private final SubastaEnVivoTimerService timerService;
 
     @Transactional
     public PujaResumen pujar(Integer subastaId, PujaRequest req, String email) {
@@ -52,6 +53,11 @@ public class PujaService {
 
         if (!"abierta".equals(subasta.getEstado())) {
             throw new BadRequestException("La subasta no está en vivo");
+        }
+
+        Integer secondsLeftBeforeBid = timerService.ensureTimerStarted(subastaId);
+        if (secondsLeftBeforeBid == null || secondsLeftBeforeBid <= 0) {
+            throw new BadRequestException("El lote actual ya finalizo");
         }
 
         // A-10: bloquear usuarios no admitidos o con multas
@@ -170,18 +176,25 @@ public class PujaService {
         notificacionService.notificarPujaRegistrada(cliente, nombreItem, req.getMonto());
 
         PujaResumen resumen = toPujaResumen(pujo, pe);
+        extra.setFechaUltimaPuja(LocalDateTime.now());
+        subastaExtraRepository.save(extra);
+
+        int secondsLeft = timerService.extendAfterBid(subastaId, item.getIdentificador());
+        BigDecimal nuevaPujaMinima = calcularPujaMinima(precioBase, pujo.getImporte());
+        BigDecimal nuevaPujaMaxima = calcularPujaMaxima(precioBase, pujo.getImporte());
         eventPublisher.publishEvent(new BidPlacedDomainEvent(
                 subastaId,
                 item.getIdentificador(),
                 pujo.getIdentificador(),
                 pujo.getImporte(),
                 resumen.getNombreUsuario(),
-                resumen.getTimestamp()
+                resumen.getTimestamp(),
+                pujo.getImporte(),
+                nuevaPujaMinima,
+                nuevaPujaMaxima,
+                secondsLeft
         ));
         publicarPujaSuperadaSiCorresponde(mejorPujaAnterior, cliente, subastaId, item, resumen);
-
-        extra.setFechaUltimaPuja(LocalDateTime.now());
-        subastaExtraRepository.save(extra);
 
         return resumen;
     }

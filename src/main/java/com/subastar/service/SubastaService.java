@@ -29,6 +29,7 @@ public class SubastaService {
     private final ProductoDetalleRepository productoDetalleRepository;
     private final FotoRepository fotoRepository;
     private final CredencialRepository credencialRepository;
+    private final SubastaEnVivoTimerService timerService;
 
     public List<SubastaResumen> listar(String estado, String categoria, String moneda, String busqueda) {
         return subastaRepository.findAll().stream()
@@ -85,6 +86,11 @@ public class SubastaService {
         SubastaExtra extra = subastaExtraRepository.findBySubastaId(subastaId).orElse(null);
 
         EstadoEnVivoResponse resp = new EstadoEnVivoResponse();
+        Integer secondsLeft = null;
+        if ("abierta".equals(s.getEstado())) {
+            secondsLeft = timerService.ensureTimerStarted(subastaId);
+            extra = subastaExtraRepository.findBySubastaId(subastaId).orElse(null);
+        }
 
         if (extra != null && extra.getItemActualId() != null) {
             ItemCatalogo itemActual = itemCatalogoRepository.findById(extra.getItemActualId()).orElse(null);
@@ -104,23 +110,7 @@ public class SubastaService {
                 resp.setPujaMinima(calcularPujaMinima(precioBase, mejorOferta));
                 resp.setPujaMaxima(calcularPujaMaxima(precioBase, mejorOferta));
 
-                if (extra.getFechaInicioLote() == null) {
-                    extra.setFechaInicioLote(LocalDateTime.now());
-                    extra.setFechaUltimaPuja(null);
-                    subastaExtraRepository.save(extra);
-                }
-
-                Integer segundosRestantes = null;
-                if (extra.getFechaInicioLote() != null) {
-                    LocalDateTime ahora = LocalDateTime.now();
-                    LocalDateTime referencia = extra.getFechaUltimaPuja() != null
-                            ? extra.getFechaUltimaPuja()
-                            : extra.getFechaInicioLote();
-                    long limite = extra.getFechaUltimaPuja() != null ? 20 : 60;
-                    long transcurridos = java.time.Duration.between(referencia, ahora).getSeconds();
-                    segundosRestantes = (int) Math.max(0, limite - transcurridos);
-                }
-                resp.setSegundosRestantes(segundosRestantes);
+                resp.setSegundosRestantes(secondsLeft);
 
                 List<PujaResumen> historial = pujoRepository
                         .findByItemIdentificadorOrderByIdentificadorDesc(itemActual.getIdentificador())

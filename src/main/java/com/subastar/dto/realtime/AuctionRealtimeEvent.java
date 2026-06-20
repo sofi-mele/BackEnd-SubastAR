@@ -18,4 +18,10 @@ public class AuctionRealtimeEvent {
     private LocalDateTime timestamp;
     private BigDecimal pujaMinima;
     private BigDecimal pujaMaxima;
+    private BigDecimal bestBid;
+    private BigDecimal minBid;
+    private BigDecimal maxBid;
+    private Integer secondsLeft;
+    private String message;
+    private String title;
 }
