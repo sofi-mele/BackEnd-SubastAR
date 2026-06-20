@@ -1,13 +1,18 @@
 package com.subastar.controller;
 
+import com.subastar.dto.admin.AsignarPolizaRequest;
+import com.subastar.dto.admin.AsignarSubastaRequest;
+import com.subastar.dto.admin.CrearSubastaRequest;
 import com.subastar.dto.bien.AceptarBienRequest;
 import com.subastar.dto.bien.RechazarBienRequest;
 import com.subastar.model.SubastaExtra;
 import com.subastar.repository.SubastaExtraRepository;
+import com.subastar.service.AdminService;
 import com.subastar.service.AuthService;
 import com.subastar.service.BienService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +26,7 @@ public class AdminController {
 
     private final AuthService authService;
     private final BienService bienService;
+    private final AdminService adminService;
     private final SubastaExtraRepository subastaExtraRepository;
 
     @PostMapping("/registros/{id}/aprobar")
@@ -53,6 +59,34 @@ public class AdminController {
             @Valid @RequestBody RechazarBienRequest req) {
         bienService.rechazarBien(id, req.getMotivo());
         return ResponseEntity.ok(Map.of("message", "Bien rechazado y notificación enviada al usuario."));
+    }
+
+    @PostMapping("/subastas/crear")
+    public ResponseEntity<Map<String, Object>> crearSubasta(@Valid @RequestBody CrearSubastaRequest req) {
+        Integer id = adminService.crearSubasta(req);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id, "message", "Subasta creada correctamente."));
+    }
+
+    @PostMapping("/subastas/{id}/resetear")
+    public ResponseEntity<Map<String, String>> resetearSubasta(@PathVariable Integer id) {
+        adminService.resetearSubasta(id);
+        return ResponseEntity.ok(Map.of("message", "Subasta reseteada correctamente."));
+    }
+
+    @PostMapping("/bienes/{id}/asignar-subasta")
+    public ResponseEntity<Map<String, String>> asignarSubasta(
+            @PathVariable Integer id,
+            @Valid @RequestBody AsignarSubastaRequest req) {
+        adminService.asignarSubasta(id, req);
+        return ResponseEntity.ok(Map.of("message", "Bien asignado a la subasta correctamente."));
+    }
+
+    @PostMapping("/bienes/{id}/asignar-poliza")
+    public ResponseEntity<Map<String, String>> asignarPoliza(
+            @PathVariable Integer id,
+            @Valid @RequestBody AsignarPolizaRequest req) {
+        adminService.asignarPoliza(id, req);
+        return ResponseEntity.ok(Map.of("message", "Póliza asignada al bien correctamente."));
     }
 
     @PostMapping("/subastas/{subastaId}/iniciar-lote")

@@ -104,6 +104,12 @@ public class NotificacionService {
         enviar(cliente, "bien", contenido);
     }
 
+    public void notificarBienAsignadoASubasta(Cliente cliente, String nombreBien, Integer subastaId) {
+        String contenido = "Tu bien \"" + nombreBien + "\" fue incluido en la subasta #" + subastaId + ".\n"
+                + "Podés ver los detalles desde 'Mis bienes'.";
+        enviar(cliente, "bien", contenido);
+    }
+
     public void notificarBienRechazado(Cliente cliente, String nombreBien, String motivo) {
         String contenido = "Tu bien \"" + nombreBien + "\" no fue aceptado para subasta.\n"
                 + "Motivo: " + (motivo != null ? motivo : "Sin especificar") + "\n"
