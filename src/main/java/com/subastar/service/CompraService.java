@@ -166,7 +166,7 @@ public class CompraService {
         });
 
         if (extra.getBeneficiarioId() != null && !extra.getBeneficiarioId().equals(clienteGanadorId)) {
-            throw new BadRequestException("La póliza asociada al producto ya pertenece a otro beneficiario");
+            return;
         }
         if (extra.getBeneficiarioId() == null) {
             extra.setBeneficiarioId(clienteGanadorId);
