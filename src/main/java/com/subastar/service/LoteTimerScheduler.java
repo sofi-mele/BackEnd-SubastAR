@@ -4,6 +4,7 @@ import com.subastar.model.SubastaExtra;
 import com.subastar.repository.SubastaExtraRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,12 @@ public class LoteTimerScheduler {
     private final SubastaExtraRepository subastaExtraRepository;
     private final CierreLoteService cierreLoteService;
 
+    @Value("${app.lote.timeout-entre-pujas:60}")
+    private int timeoutEntrePujas;
+
+    @Value("${app.lote.timeout-sin-pujas:300}")
+    private int timeoutSinPujas;
+
     @Scheduled(fixedDelayString = "${app.scheduler.lote-timer-delay:5000}")
     public void verificarTimersVencidos() {
         List<SubastaExtra> activos = subastaExtraRepository.findActiveTimers();
@@ -26,9 +33,9 @@ public class LoteTimerScheduler {
                 LocalDateTime ahora = LocalDateTime.now();
                 boolean vencido;
                 if (extra.getFechaUltimaPuja() != null) {
-                    vencido = ahora.isAfter(extra.getFechaUltimaPuja().plusSeconds(60));
+                    vencido = ahora.isAfter(extra.getFechaUltimaPuja().plusSeconds(timeoutEntrePujas));
                 } else {
-                    vencido = ahora.isAfter(extra.getFechaInicioLote().plusSeconds(120));
+                    vencido = ahora.isAfter(extra.getFechaInicioLote().plusSeconds(timeoutSinPujas));
                 }
                 if (vencido) {
                     log.info("Timer vencido para subasta={}, cerrando lote", extra.getSubastaId());
