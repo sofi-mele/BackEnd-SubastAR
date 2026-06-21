@@ -3,7 +3,6 @@ package com.subastar.service;
 import com.subastar.dto.compra.CompraDetalle;
 import com.subastar.dto.compra.CompraResumen;
 import com.subastar.dto.compra.RegularizarPagoRequest;
-import com.subastar.exception.BadRequestException;
 import com.subastar.exception.ForbiddenException;
 import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.*;
@@ -152,7 +151,7 @@ public class CompraService {
         String nroPoliza = registro.getProducto().getSeguroNroPoliza();
         if (nroPoliza == null || nroPoliza.isBlank()) return;
         if (!seguroRepository.existsById(nroPoliza)) {
-            throw new BadRequestException("La póliza asociada al producto no existe");
+            return;
         }
 
         Integer clienteGanadorId = registro.getCliente().getIdentificador();
