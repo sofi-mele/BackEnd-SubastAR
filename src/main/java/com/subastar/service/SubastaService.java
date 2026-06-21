@@ -220,8 +220,8 @@ public class SubastaService {
     }
 
     private String calcEstadoItem(ItemCatalogo item) {
-        boolean vendido = registroDeSubastaRepository.findAll().stream()
-                .anyMatch(r -> r.getProducto().getIdentificador().equals(item.getProducto().getIdentificador()));
+        boolean vendido = registroDeSubastaRepository
+                .existsByProductoIdentificador(item.getProducto().getIdentificador());
         if (vendido) return "vendido";
         if ("si".equals(item.getSubastado())) return "sin_puja";
         return "disponible";

@@ -22,6 +22,7 @@ public class MultaScheduler {
 
     private final CompraExtraRepository compraExtraRepository;
     private final MultaRepository multaRepository;
+    private final NotificacionService notificacionService;
 
     @Transactional
     @Scheduled(fixedDelayString = "${app.scheduler.multas-delay:3600000}")
@@ -47,6 +48,8 @@ public class MultaScheduler {
                 multa.setMonto(monto);
                 multa.setEstado("pendiente");
                 multaRepository.save(multa);
+                notificacionService.notificarMulta(
+                        registro.getCliente(), monto, "Pago no realizado dentro de las 72 horas");
 
                 log.info("Multa creada: cliente={} compra={} monto={}",
                         registro.getCliente().getIdentificador(), compra.getRegistroId(), monto);

@@ -3,7 +3,9 @@ package com.subastar.service;
 import com.subastar.dto.realtime.AuctionRealtimeEvent;
 import com.subastar.dto.realtime.RealtimeEventType;
 import com.subastar.model.Catalogo;
+import com.subastar.model.Cliente;
 import com.subastar.model.CompraExtra;
+import com.subastar.model.Duenio;
 import com.subastar.model.ItemCatalogo;
 import com.subastar.model.Pujo;
 import com.subastar.model.PujoExtra;
@@ -12,10 +14,13 @@ import com.subastar.model.Subasta;
 import com.subastar.model.SubastaExtra;
 import com.subastar.realtime.RealtimeEventPublisher;
 import com.subastar.repository.CatalogoRepository;
+import com.subastar.repository.ClienteRepository;
 import com.subastar.repository.CompraExtraRepository;
+import com.subastar.repository.DuenioRepository;
 import com.subastar.repository.ItemCatalogoRepository;
 import com.subastar.repository.PujoExtraRepository;
 import com.subastar.repository.PujoRepository;
+import com.subastar.repository.ProductoRepository;
 import com.subastar.repository.RegistroDeSubastaRepository;
 import com.subastar.repository.SubastaExtraRepository;
 import com.subastar.repository.SubastaRepository;
@@ -52,6 +57,9 @@ public class SubastaEnVivoTimerService {
     private final PujoExtraRepository pujoExtraRepository;
     private final RegistroDeSubastaRepository registroDeSubastaRepository;
     private final CompraExtraRepository compraExtraRepository;
+    private final ClienteRepository clienteRepository;
+    private final DuenioRepository duenioRepository;
+    private final ProductoRepository productoRepository;
     private final NotificacionService notificacionService;
     private final RealtimeEventPublisher realtimeEventPublisher;
     private final TransactionTemplate transactionTemplate;
@@ -63,6 +71,9 @@ public class SubastaEnVivoTimerService {
 
     @Value("${app.auction.bid-extension-seconds:30}")
     private int bidExtensionSeconds;
+
+    @Value("${subastar.empresa.cliente-id:}")
+    private String empresaClienteId;
 
     public Integer ensureTimerStarted(Integer subastaId) {
         TimerInitialization initialization = transactionTemplate.execute(status -> initializeCurrentItem(subastaId));
@@ -233,12 +244,17 @@ public class SubastaEnVivoTimerService {
         if (winner != null) {
             winner.setGanador("si");
             pujoRepository.saveAll(bids);
-            createPurchase(subasta, item, winner);
+            Integer medioPagoId = pujoExtraRepository.findByPujoId(winner.getIdentificador())
+                    .map(PujoExtra::getMedioPagoId)
+                    .orElse(null);
+            createPurchase(subasta, item, winner.getAsistente().getCliente(), winner.getImporte(), medioPagoId);
+            transferOwnership(item, winner.getAsistente().getCliente());
             notifyWinner(item, winner);
             log.info("Ganador elegido subasta={} item={} puja={} cliente={} importe={}",
                     subastaId, item.getIdentificador(), winner.getIdentificador(),
                     winner.getAsistente().getCliente().getIdentificador(), winner.getImporte());
         } else {
+            createCompanyPurchase(subasta, item);
             log.info("Lote cerrado sin pujas subasta={} item={}", subastaId, item.getIdentificador());
         }
 
@@ -272,23 +288,66 @@ public class SubastaEnVivoTimerService {
                 .orElse(null);
     }
 
-    private void createPurchase(Subasta subasta, ItemCatalogo item, Pujo winner) {
+    private void createPurchase(Subasta subasta, ItemCatalogo item, Cliente buyer,
+                                BigDecimal amount, Integer medioPagoId) {
         RegistroDeSubasta registro = new RegistroDeSubasta();
         registro.setSubasta(subasta);
         registro.setDuenio(item.getProducto().getDuenio());
         registro.setProducto(item.getProducto());
-        registro.setCliente(winner.getAsistente().getCliente());
-        registro.setImporte(winner.getImporte());
+        registro.setCliente(buyer);
+        registro.setImporte(amount);
         registro.setComision(item.getComision());
         registro = registroDeSubastaRepository.save(registro);
 
         CompraExtra compraExtra = new CompraExtra();
         compraExtra.setRegistroId(registro.getIdentificador());
-        PujoExtra pujoExtra = pujoExtraRepository.findByPujoId(winner.getIdentificador()).orElse(null);
-        if (pujoExtra != null) {
-            compraExtra.setMedioPagoId(pujoExtra.getMedioPagoId());
+        if (medioPagoId != null) {
+            compraExtra.setMedioPagoId(medioPagoId);
         }
         compraExtraRepository.save(compraExtra);
+    }
+
+    private void createCompanyPurchase(Subasta subasta, ItemCatalogo item) {
+        if (empresaClienteId == null || empresaClienteId.isBlank()) {
+            log.error("Lote sin pujas subasta={} item={}: falta configurar SUBASTAR_EMPRESA_CLIENTE_ID",
+                    subasta.getIdentificador(), item.getIdentificador());
+            return;
+        }
+
+        final Integer clienteId;
+        try {
+            clienteId = Integer.valueOf(empresaClienteId.trim());
+        } catch (NumberFormatException ex) {
+            log.error("Lote sin pujas subasta={} item={}: SUBASTAR_EMPRESA_CLIENTE_ID no es un entero valido",
+                    subasta.getIdentificador(), item.getIdentificador());
+            return;
+        }
+
+        Cliente empresa = clienteRepository.findById(clienteId).orElse(null);
+        if (empresa == null) {
+            log.error("Lote sin pujas subasta={} item={}: cliente empresa id={} no encontrado",
+                    subasta.getIdentificador(), item.getIdentificador(), clienteId);
+            return;
+        }
+
+        createPurchase(subasta, item, empresa, item.getPrecioBase(), null);
+        transferOwnership(item, empresa);
+        log.info("Auto-compra empresa registrada subasta={} item={} cliente={} importe={}",
+                subasta.getIdentificador(), item.getIdentificador(), clienteId, item.getPrecioBase());
+    }
+
+    private void transferOwnership(ItemCatalogo item, Cliente buyer) {
+        Duenio nuevoDuenio = duenioRepository.findById(buyer.getIdentificador()).orElse(null);
+        if (nuevoDuenio == null) {
+            log.warn("No se actualizo duenio del producto={} porque cliente={} no tiene registro Duenio",
+                    item.getProducto().getIdentificador(), buyer.getIdentificador());
+            return;
+        }
+
+        item.getProducto().setDuenio(nuevoDuenio);
+        productoRepository.save(item.getProducto());
+        log.info("Duenio actualizado producto={} nuevo_duenio={}",
+                item.getProducto().getIdentificador(), nuevoDuenio.getIdentificador());
     }
 
     private void notifyWinner(ItemCatalogo item, Pujo winner) {

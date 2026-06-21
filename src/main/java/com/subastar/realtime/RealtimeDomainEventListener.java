@@ -26,6 +26,8 @@ public class RealtimeDomainEventListener {
                 .pujaId(event.pujaId())
                 .monto(event.monto())
                 .nombreUsuario(event.nombreUsuario())
+                .emailUsuario(event.emailUsuario())
+                .bidderEmail(event.emailUsuario())
                 .timestamp(event.timestamp())
                 .bestBid(event.bestBid())
                 .minBid(event.minBid())
@@ -49,6 +51,7 @@ public class RealtimeDomainEventListener {
                 .monto(event.monto())
                 .nombreUsuario(event.nombreUsuario())
                 .timestamp(event.timestamp())
+                .secondsLeft(event.secondsLeft())
                 .build();
         realtimeEventPublisher.publishUserBidEvent(event.username(), payload);
     }

@@ -9,6 +9,7 @@ public record BidPlacedDomainEvent(
         Integer pujaId,
         BigDecimal monto,
         String nombreUsuario,
+        String emailUsuario,
         LocalDateTime timestamp,
         BigDecimal bestBid,
         BigDecimal minBid,

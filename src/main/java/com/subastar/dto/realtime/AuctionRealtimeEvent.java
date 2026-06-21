@@ -15,6 +15,8 @@ public class AuctionRealtimeEvent {
     private Integer pujaId;
     private BigDecimal monto;
     private String nombreUsuario;
+    private String emailUsuario;
+    private String bidderEmail;
     private LocalDateTime timestamp;
     private BigDecimal pujaMinima;
     private BigDecimal pujaMaxima;

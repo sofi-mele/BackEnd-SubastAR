@@ -10,6 +10,7 @@ public record BidOutbidDomainEvent(
         Integer pujaId,
         BigDecimal monto,
         String nombreUsuario,
-        LocalDateTime timestamp
+        LocalDateTime timestamp,
+        Integer secondsLeft
 ) {
 }

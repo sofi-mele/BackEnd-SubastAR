@@ -188,13 +188,15 @@ public class PujaService {
                 pujo.getIdentificador(),
                 pujo.getImporte(),
                 resumen.getNombreUsuario(),
+                email,
                 resumen.getTimestamp(),
                 pujo.getImporte(),
                 nuevaPujaMinima,
                 nuevaPujaMaxima,
                 secondsLeft
         ));
-        publicarPujaSuperadaSiCorresponde(mejorPujaAnterior, cliente, subastaId, item, resumen);
+        publicarPujaSuperadaSiCorresponde(
+                mejorPujaAnterior, cliente, subastaId, item, resumen, secondsLeft);
 
         return resumen;
     }
@@ -222,7 +224,8 @@ public class PujaService {
     }
 
     private void publicarPujaSuperadaSiCorresponde(Pujo mejorPujaAnterior, Cliente nuevoPostor,
-                                                   Integer subastaId, ItemCatalogo item, PujaResumen nuevaPuja) {
+                                                   Integer subastaId, ItemCatalogo item, PujaResumen nuevaPuja,
+                                                   Integer secondsLeft) {
         if (mejorPujaAnterior == null || mejorPujaAnterior.getAsistente() == null) {
             return;
         }
@@ -241,7 +244,8 @@ public class PujaService {
                         nuevaPuja.getId(),
                         nuevaPuja.getMonto(),
                         nuevaPuja.getNombreUsuario(),
-                        nuevaPuja.getTimestamp()
+                        nuevaPuja.getTimestamp(),
+                        secondsLeft
                 )));
     }
 
