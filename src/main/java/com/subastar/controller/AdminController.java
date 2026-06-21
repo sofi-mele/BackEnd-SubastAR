@@ -5,7 +5,9 @@ import com.subastar.dto.admin.AsignarSubastaRequest;
 import com.subastar.dto.admin.CrearSubastaRequest;
 import com.subastar.dto.bien.AceptarBienRequest;
 import com.subastar.dto.bien.RechazarBienRequest;
+import com.subastar.model.MedioPago;
 import com.subastar.model.SubastaExtra;
+import com.subastar.repository.MedioPagoRepository;
 import com.subastar.repository.SubastaExtraRepository;
 import com.subastar.service.AdminService;
 import com.subastar.service.AuthService;
@@ -28,6 +30,7 @@ public class AdminController {
     private final BienService bienService;
     private final AdminService adminService;
     private final SubastaExtraRepository subastaExtraRepository;
+    private final MedioPagoRepository medioPagoRepository;
 
     @PostMapping("/registros/{id}/aprobar")
     public ResponseEntity<Map<String, String>> aprobarRegistro(@PathVariable Integer id) {
@@ -87,6 +90,15 @@ public class AdminController {
             @Valid @RequestBody AsignarPolizaRequest req) {
         adminService.asignarPoliza(id, req);
         return ResponseEntity.ok(Map.of("message", "Póliza asignada al bien correctamente."));
+    }
+
+    @PostMapping("/medios-pago/{id}/verificar")
+    public ResponseEntity<Map<String, String>> verificarMedioPago(@PathVariable Integer id) {
+        MedioPago medioPago = medioPagoRepository.findById(id)
+                .orElseThrow(() -> new com.subastar.exception.ResourceNotFoundException("Medio de pago no encontrado"));
+        medioPago.setVerificado(true);
+        medioPagoRepository.save(medioPago);
+        return ResponseEntity.ok(Map.of("message", "Medio de pago verificado correctamente."));
     }
 
     @PostMapping("/subastas/{subastaId}/iniciar-lote")
