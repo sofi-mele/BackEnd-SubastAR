@@ -120,8 +120,7 @@ public class SeguroService {
             r.setContactoAseguradora(contacto);
         }
 
-        List<String> piezas = productoRepository.findAll().stream()
-                .filter(p -> seguro.getNroPoliza().equals(p.getSeguroNroPoliza()))
+        List<String> piezas = productoRepository.findBySeguroNroPoliza(seguro.getNroPoliza()).stream()
                 .map(p -> p.getDescripcionCatalogo() != null ? p.getDescripcionCatalogo() : "Producto #" + p.getIdentificador())
                 .collect(java.util.stream.Collectors.toList());
         r.setPiezas(piezas);
@@ -158,8 +157,7 @@ public class SeguroService {
             r.setContactoAseguradora(null);
         }
 
-        List<String> piezas = productoRepository.findAll().stream()
-                .filter(p -> seguro.getNroPoliza().equals(p.getSeguroNroPoliza()))
+        List<String> piezas = productoRepository.findBySeguroNroPoliza(seguro.getNroPoliza()).stream()
                 .map(p -> p.getDescripcionCatalogo() != null ? p.getDescripcionCatalogo() : "Producto #" + p.getIdentificador())
                 .collect(Collectors.toList());
         r.setPiezas(piezas.isEmpty() ? Collections.emptyList() : piezas);

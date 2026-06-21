@@ -32,21 +32,9 @@ public class SubastaService {
     private final SubastaEnVivoTimerService timerService;
 
     public List<SubastaResumen> listar(String estado, String categoria, String moneda, String busqueda) {
-        return subastaRepository.findAll().stream()
-                .filter(s -> estado == null || matchEstadoApi(s, estado))
-                .filter(s -> categoria == null || categoria.equals(s.getCategoria()))
-                .filter(s -> {
-                    if (moneda == null) return true;
-                    SubastaExtra extra = subastaExtraRepository.findBySubastaId(s.getIdentificador()).orElse(null);
-                    return extra != null && moneda.equals(extra.getMoneda());
-                })
-                .filter(s -> {
-                    if (busqueda == null) return true;
-                    SubastaExtra extra = subastaExtraRepository.findBySubastaId(s.getIdentificador()).orElse(null);
-                    String nombre = extra != null ? extra.getNombre() : "";
-                    return nombre != null && nombre.toLowerCase().contains(busqueda.toLowerCase());
-                })
-                .map(this::toResumen)
+        return subastaRepository.findForListado(categoria, moneda, busqueda).stream()
+                .filter(row -> estado == null || matchEstadoApi((Subasta) row[0], estado))
+                .map(row -> toResumen((Subasta) row[0], (SubastaExtra) row[1]))
                 .collect(Collectors.toList());
     }
 
@@ -150,9 +138,9 @@ public class SubastaService {
         return response;
     }
 
-    private SubastaResumen toResumen(Subasta s) {
+    private SubastaResumen toResumen(Subasta s, SubastaExtra extra) {
         SubastaResumen r = new SubastaResumen();
-        fillResumen(r, s, subastaExtraRepository.findBySubastaId(s.getIdentificador()).orElse(null));
+        fillResumen(r, s, extra);
         return r;
     }
 

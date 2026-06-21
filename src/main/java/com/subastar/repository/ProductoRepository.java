@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     List<Producto> findByDuenioIdentificador(Integer duenioId);
+    List<Producto> findBySeguroNroPoliza(String seguroNroPoliza);
 }

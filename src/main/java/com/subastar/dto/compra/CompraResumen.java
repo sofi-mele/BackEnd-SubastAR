@@ -14,6 +14,8 @@ public class CompraResumen {
     private LocalDateTime fecha;
     @JsonProperty("valor_pujado")
     private BigDecimal valorPujado;
+    @JsonProperty("comision")
+    private BigDecimal comision;
     private BigDecimal multa;
     @JsonProperty("estado_pago")
     private String estadoPago;

@@ -45,6 +45,11 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.getEstadoCuenta(user.getUsername()));
     }
 
+    @GetMapping("/me/multas")
+    public ResponseEntity<List<MultaResponse>> getMultas(@AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(usuarioService.getMultas(user.getUsername()));
+    }
+
     @GetMapping("/me/metricas")
     public ResponseEntity<MetricasResponse> getMetricas(@AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(usuarioService.getMetricas(user.getUsername()));

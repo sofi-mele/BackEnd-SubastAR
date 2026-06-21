@@ -86,6 +86,39 @@ public class UsuarioService {
         return new EstadoCuentaResponse(estado, multaPendiente, mensaje);
     }
 
+    public List<MultaResponse> getMultas(String email) {
+        Credencial cred = credencialRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        Integer clienteId = cred.getPersonaId();
+
+        List<Multa> multas = multaRepository
+                .findByClienteIdentificadorOrderByCreadoEnDesc(clienteId);
+        List<Integer> registroIds = multas.stream()
+                .map(Multa::getRegistroId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Integer, RegistroDeSubasta> registros = registroDeSubastaRepository.findAllById(registroIds).stream()
+                .collect(Collectors.toMap(RegistroDeSubasta::getIdentificador, registro -> registro));
+
+        return multas.stream().map(multa -> {
+            RegistroDeSubasta registro = registros.get(multa.getRegistroId());
+            String descripcion = registro != null && registro.getProducto() != null
+                    ? registro.getProducto().getDescripcionCatalogo()
+                    : null;
+            return MultaResponse.builder()
+                    .id(multa.getId())
+                    .monto(multa.getMonto())
+                    .estado(multa.getEstado())
+                    .fecha(multa.getCreadoEn())
+                    .motivo("Pago no realizado dentro de las 72 horas")
+                    .registroId(multa.getRegistroId())
+                    .compraId(multa.getRegistroId())
+                    .descripcionCompra(descripcion)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
     public MetricasResponse getMetricas(String email) {
         Credencial cred = credencialRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));

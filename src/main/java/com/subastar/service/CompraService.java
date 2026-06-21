@@ -99,6 +99,7 @@ public class CompraService {
         c.setNombreItem(r.getProducto().getDescripcionCatalogo());
         c.setSubasta("Subasta #" + r.getSubasta().getIdentificador());
         c.setValorPujado(r.getImporte());
+        c.setComision(r.getComision());
         String nroPoliza = r.getProducto() != null ? r.getProducto().getSeguroNroPoliza() : null;
         c.setPolizaId(nroPoliza);
         c.setNumeroPoliza(nroPoliza);
@@ -123,7 +124,7 @@ public class CompraService {
         CompraResumen base = toResumen(r, extra);
         d.setId(base.getId()); d.setNombreItem(base.getNombreItem());
         d.setSubasta(base.getSubasta()); d.setFecha(base.getFecha());
-        d.setValorPujado(base.getValorPujado()); d.setMulta(base.getMulta());
+        d.setValorPujado(base.getValorPujado()); d.setComision(base.getComision()); d.setMulta(base.getMulta());
         d.setEstadoPago(base.getEstadoPago()); d.setEstadoEntrega(base.getEstadoEntrega());
         d.setPolizaId(base.getPolizaId()); d.setNumeroPoliza(base.getNumeroPoliza());
 
