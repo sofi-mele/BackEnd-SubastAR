@@ -150,5 +150,10 @@ public class AdminService {
 
         det.setPolizaId(req.getNumeroPoliza());
         productoDetalleRepository.save(det);
+
+        Producto producto = productoRepository.findById(det.getProductoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado para el bien " + bienId));
+        producto.setSeguroNroPoliza(req.getNumeroPoliza());
+        productoRepository.save(producto);
     }
 }
