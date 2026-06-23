@@ -112,6 +112,9 @@ public class AdminService {
         if (det.getPrecioBase() == null || det.getComision() == null) {
             throw new BadRequestException("El bien no tiene precio_base o comision definidos");
         }
+        if (itemCatalogoRepository.existsActivaByProductoId(det.getProductoId())) {
+            throw new BadRequestException("El bien ya se encuentra asignado a una subasta activa");
+        }
 
         subastaRepository.findById(req.getSubastaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subasta no encontrada: " + req.getSubastaId()));
