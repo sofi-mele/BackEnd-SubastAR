@@ -193,7 +193,7 @@ public class SubastaService {
         r.setEstado(calcEstadoItem(item));
 
         List<String> imgs = fotoRepository.findByProductoIdentificador(prod.getIdentificador())
-                .stream().map(f -> "/api/v1/fotos/" + f.getIdentificador()).collect(Collectors.toList());
+                .stream().map(f -> "/fotos/" + f.getIdentificador()).collect(Collectors.toList());
         r.setImagenes(imgs);
 
         if (prod.getDuenio() != null && prod.getDuenio().getPersona() != null) {
