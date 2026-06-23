@@ -6,12 +6,14 @@ import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.*;
 import com.subastar.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +32,11 @@ public class SubastaService {
     private final FotoRepository fotoRepository;
     private final CredencialRepository credencialRepository;
     private final SubastaEnVivoTimerService timerService;
+    private final BienSolicitudRepository bienSolicitudRepository;
+    private final BienSolicitudArchivoRepository bienSolicitudArchivoRepository;
+
+    @Value("${cloudinary.cloud_name:}")
+    private String cloudinaryCloudName;
 
     public List<SubastaResumen> listar(String estado, String categoria, String moneda, String busqueda) {
         return subastaRepository.findForListado(categoria, moneda, busqueda).stream()
@@ -194,6 +201,17 @@ public class SubastaService {
 
         List<String> imgs = fotoRepository.findByProductoIdentificador(prod.getIdentificador())
                 .stream().map(f -> "/fotos/" + f.getIdentificador()).collect(Collectors.toList());
+        // Fallback: las fotos del wizard de venta viven en bien_solicitud_archivos
+        // (por solicitud), no en la tabla fotos (por producto).
+        if (imgs.isEmpty()) {
+            imgs = bienSolicitudRepository.findByProductoId(prod.getIdentificador())
+                    .map(sol -> bienSolicitudArchivoRepository
+                            .findBySolicitudIdAndTipoArchivo(sol.getId(), "foto").stream()
+                            .map(a -> buildCloudinaryImageUrl(a.getUrl()))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList()))
+                    .orElse(imgs);
+        }
         r.setImagenes(imgs);
 
         if (prod.getDuenio() != null && prod.getDuenio().getPersona() != null) {
@@ -205,6 +223,14 @@ public class SubastaService {
             r.setHistoria(det.getDatosHistoricos());
         }
         return r;
+    }
+
+    private String buildCloudinaryImageUrl(String storedValue) {
+        if (storedValue == null || storedValue.isBlank()) return null;
+        if (storedValue.startsWith("http://") || storedValue.startsWith("https://")) return storedValue;
+        if (cloudinaryCloudName == null || cloudinaryCloudName.isBlank()) return null;
+        return "https://res.cloudinary.com/" + cloudinaryCloudName
+                + "/image/upload/f_auto,q_auto/" + storedValue;
     }
 
     private String calcEstadoItem(ItemCatalogo item) {

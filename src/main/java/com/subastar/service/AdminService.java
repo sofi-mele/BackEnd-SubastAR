@@ -106,6 +106,9 @@ public class AdminService {
         if (!"aceptado".equals(det.getEstadoSolicitud())) {
             throw new BadRequestException("El bien debe estar en estado 'aceptado' para ser asignado a una subasta");
         }
+        if (!Boolean.TRUE.equals(det.getAceptoCondiciones())) {
+            throw new BadRequestException("El usuario aún no aceptó las condiciones del bien (precio base y comisiones)");
+        }
         if (det.getPrecioBase() == null || det.getComision() == null) {
             throw new BadRequestException("El bien no tiene precio_base o comision definidos");
         }
