@@ -330,7 +330,21 @@ public class SubastaEnVivoTimerService {
             return;
         }
 
-        createPurchase(subasta, item, empresa, item.getPrecioBase(), null);
+        // La empresa paga el precio base al instante: la compra NO debe quedar
+        // pendiente (si no, el MultaScheduler la multaría a las 72hs).
+        RegistroDeSubasta registro = new RegistroDeSubasta();
+        registro.setSubasta(subasta);
+        registro.setDuenio(item.getProducto().getDuenio());
+        registro.setProducto(item.getProducto());
+        registro.setCliente(empresa);
+        registro.setImporte(item.getPrecioBase());
+        registro.setComision(item.getComision());
+        registro = registroDeSubastaRepository.save(registro);
+
+        CompraExtra compraExtra = new CompraExtra();
+        compraExtra.setRegistroId(registro.getIdentificador());
+        compraExtra.setEstadoPago("pagado");
+        compraExtraRepository.save(compraExtra);
         transferOwnership(item, empresa);
         log.info("Auto-compra empresa registrada subasta={} item={} cliente={} importe={}",
                 subasta.getIdentificador(), item.getIdentificador(), clienteId, item.getPrecioBase());
