@@ -47,7 +47,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/ws").permitAll()
                 .requestMatchers("/ws/**").permitAll()
-                .requestMatchers( "/health/ping").permitAll()
+                .requestMatchers("/health/ping", "/health/db").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/registro", "/auth/verificar-codigo",
                         "/auth/completar-registro", "/auth/login", "/auth/reenviar-codigo",
                         "/auth/recuperar-password", "/auth/recuperar-password/confirmar",
