@@ -18,6 +18,8 @@ public class BienResumen {
     private String motivoRechazo;
     @JsonProperty("costo_envio")
     private BigDecimal costoEnvio;
+    @JsonProperty("costo_devolucion")
+    private BigDecimal costoDevolucion;
     @JsonProperty("acepto_condiciones")
     private Boolean aceptoCondiciones;
     @JsonProperty("ubicacion_deposito")
