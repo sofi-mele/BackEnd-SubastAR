@@ -186,7 +186,7 @@ public class BienService {
 
     @Transactional
     public BienSolicitudResponse cargarDocumentos(String email, String codigoSolicitud,
-                                                   CargarDocumentosBienRequest req, List<MultipartFile> docs) {
+                                                   CargarDocumentosBienRequest req) {
         BienSolicitud sol = getSolicitudDelCliente(email, codigoSolicitud);
 
         if (Boolean.TRUE.equals(req.getDeclaraPropiedad())) {
@@ -196,33 +196,39 @@ public class BienService {
             throw new BadRequestException("Debe aceptar que la devolución del bien, en caso de no ser aceptado, es con cargo al usuario");
         }
 
-        if (docs != null) {
-            for (MultipartFile f : docs) {
-                if (f == null || f.isEmpty()) continue;
-                BienSolicitudArchivo arch = new BienSolicitudArchivo();
-                arch.setCodigoArchivo("DOC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-                arch.setSolicitud(sol);
-                arch.setNombreArchivo(f.getOriginalFilename() != null ? f.getOriginalFilename() : "doc.pdf");
-                arch.setTipoArchivo("documento");
-                try {
-                    byte[] data = f.getBytes();
-                    String url = cloudinaryService.upload(data, arch.getCodigoArchivo());
-                    if (url != null) {
-                        arch.setUrl(url);
-                        arch.setDatos(null);
-                    } else {
-                        arch.setDatos(data);
-                    }
-                } catch (IOException e) {
-                    throw new BadRequestException("Error al procesar el documento: " + f.getOriginalFilename());
-                }
-                bienSolicitudArchivoRepository.save(arch);
-            }
-        }
-
         sol.setEstado("documentos_cargados");
         sol.setPasoActual("confirmar");
         bienSolicitudRepository.save(sol);
+
+        return toResponse(sol);
+    }
+
+    @Transactional
+    public BienSolicitudResponse subirArchivosDocumentos(String email, String codigoSolicitud,
+                                                          List<MultipartFile> docs) {
+        BienSolicitud sol = getSolicitudDelCliente(email, codigoSolicitud);
+
+        for (MultipartFile f : docs) {
+            if (f == null || f.isEmpty()) continue;
+            BienSolicitudArchivo arch = new BienSolicitudArchivo();
+            arch.setCodigoArchivo("DOC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            arch.setSolicitud(sol);
+            arch.setNombreArchivo(f.getOriginalFilename() != null ? f.getOriginalFilename() : "doc.pdf");
+            arch.setTipoArchivo("documento");
+            try {
+                byte[] data = f.getBytes();
+                String url = cloudinaryService.upload(data, arch.getCodigoArchivo());
+                if (url != null) {
+                    arch.setUrl(url);
+                    arch.setDatos(null);
+                } else {
+                    arch.setDatos(data);
+                }
+            } catch (IOException e) {
+                throw new BadRequestException("Error al procesar el documento: " + f.getOriginalFilename());
+            }
+            bienSolicitudArchivoRepository.save(arch);
+        }
 
         return toResponse(sol);
     }

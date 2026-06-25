@@ -69,18 +69,20 @@ public class BienController {
         return ResponseEntity.ok(Map.of("message", "Foto eliminada correctamente."));
     }
 
-    @PostMapping(value = "/solicitudes/{codigo}/documentos", consumes = "multipart/form-data")
+    @PostMapping("/solicitudes/{codigo}/documentos")
     public ResponseEntity<BienSolicitudResponse> cargarDocumentos(
             @PathVariable String codigo,
-            @RequestPart("declara_propiedad") String declaraPropiedad,
-            @RequestPart("acepta_devolucion_con_cargo") String aceptaDevolucionConCargo,
-            @RequestPart(value = "documentos", required = false) List<MultipartFile> docs,
+            @Valid @RequestBody CargarDocumentosBienRequest req,
             @AuthenticationPrincipal UserDetails user) {
-        log.info("Recibiendo petición de cargar documentos para solicitud {} por usuario {}. Declara: {}, AceptaDevolucion: {}", codigo, user.getUsername(), declaraPropiedad, aceptaDevolucionConCargo);
-        CargarDocumentosBienRequest req = new CargarDocumentosBienRequest();
-        req.setDeclaraPropiedad("true".equalsIgnoreCase(declaraPropiedad));
-        req.setAceptaDevolucionConCargo("true".equalsIgnoreCase(aceptaDevolucionConCargo));
-        return ResponseEntity.ok(bienService.cargarDocumentos(user.getUsername(), codigo, req, docs));
+        return ResponseEntity.ok(bienService.cargarDocumentos(user.getUsername(), codigo, req));
+    }
+
+    @PostMapping(value = "/solicitudes/{codigo}/documentos/archivos", consumes = "multipart/form-data")
+    public ResponseEntity<BienSolicitudResponse> subirArchivosDocumentos(
+            @PathVariable String codigo,
+            @RequestPart("documentos") List<MultipartFile> docs,
+            @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(bienService.subirArchivosDocumentos(user.getUsername(), codigo, docs));
     }
 
     @DeleteMapping("/solicitudes/{codigo}/documentos/{codigoDoc}")
