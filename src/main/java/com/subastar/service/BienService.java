@@ -420,7 +420,6 @@ public class BienService {
         r.setCostoEnvio(det.getCostoEnvio());
         r.setAceptoCondiciones(det.getAceptoCondiciones());
         r.setUbicacionDeposito(det.getUbicacionDeposito());
-        r.setDireccionEnvioInspeccion(det.getDireccionEnvioInspeccion());
 
         if (r.getPrecioBase() == null || r.getComision() == null || r.getSubastaAsignada() == null) {
             itemCatalogoRepository.findAll().stream()

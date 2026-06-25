@@ -3,7 +3,6 @@ package com.subastar.service;
 import com.subastar.dto.admin.AsignarPolizaRequest;
 import com.subastar.dto.admin.AsignarSubastaRequest;
 import com.subastar.dto.admin.CrearSubastaRequest;
-import com.subastar.dto.admin.IndicarDireccionEnvioRequest;
 import com.subastar.exception.BadRequestException;
 import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.*;
@@ -145,18 +144,17 @@ public class AdminService {
         notificacionService.notificarBienAsignadoASubasta(cliente, det.getNombre(), req.getSubastaId());
     }
 
-    public void indicarDireccionEnvio(Integer bienId, IndicarDireccionEnvioRequest req) {
+    private static final String DIRECCION_ENVIO = "Av. Corrientes 2300, CABA";
+
+    public void indicarDireccionEnvio(Integer bienId) {
         ProductoDetalle det = productoDetalleRepository.findById(bienId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
         if (!"en_revision".equals(det.getEstadoSolicitud())) {
             throw new BadRequestException("Solo se puede indicar la dirección de envío para bienes en estado 'en_revision'");
         }
-        det.setDireccionEnvioInspeccion(req.getDireccion());
-        productoDetalleRepository.save(det);
-
         Cliente cliente = clienteRepository.findById(det.getClienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
-        notificacionService.notificarDireccionEnvio(cliente, det.getNombre(), req.getDireccion());
+        notificacionService.notificarDireccionEnvio(cliente, det.getNombre(), DIRECCION_ENVIO);
     }
 
     public void asignarPoliza(Integer bienId, AsignarPolizaRequest req) {

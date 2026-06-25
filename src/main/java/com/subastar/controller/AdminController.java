@@ -3,7 +3,6 @@ package com.subastar.controller;
 import com.subastar.dto.admin.AsignarPolizaRequest;
 import com.subastar.dto.admin.AsignarSubastaRequest;
 import com.subastar.dto.admin.CrearSubastaRequest;
-import com.subastar.dto.admin.IndicarDireccionEnvioRequest;
 import com.subastar.dto.bien.AceptarBienRequest;
 import com.subastar.dto.bien.RechazarBienRequest;
 import com.subastar.model.MedioPago;
@@ -86,10 +85,8 @@ public class AdminController {
     }
 
     @PostMapping("/bienes/{id}/indicar-direccion-envio")
-    public ResponseEntity<Map<String, String>> indicarDireccionEnvio(
-            @PathVariable Integer id,
-            @Valid @RequestBody IndicarDireccionEnvioRequest req) {
-        adminService.indicarDireccionEnvio(id, req);
+    public ResponseEntity<Map<String, String>> indicarDireccionEnvio(@PathVariable Integer id) {
+        adminService.indicarDireccionEnvio(id);
         return ResponseEntity.ok(Map.of("message", "Dirección de envío informada al usuario correctamente."));
     }
 

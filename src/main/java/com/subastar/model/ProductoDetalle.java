@@ -55,9 +55,6 @@ public class ProductoDetalle {
     @Column(name = "ubicacion_deposito")
     private String ubicacionDeposito;
 
-    @Column(name = "direccion_envio_inspeccion")
-    private String direccionEnvioInspeccion;
-
     @Column(name = "precio_base", precision = 18, scale = 2)
     private BigDecimal precioBase;
 
