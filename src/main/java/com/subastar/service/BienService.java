@@ -449,7 +449,7 @@ public class BienService {
         d.setId(base.getId()); d.setNombre(base.getNombre()); d.setEstado(base.getEstado());
         d.setSubastaAsignada(base.getSubastaAsignada()); d.setPrecioBase(base.getPrecioBase());
         d.setComision(base.getComision()); d.setMotivoRechazo(base.getMotivoRechazo());
-        d.setCostoEnvio(base.getCostoEnvio());
+        d.setCostoDevolucion(base.getCostoDevolucion());
         d.setUbicacionDeposito(base.getUbicacionDeposito()); d.setPolizaId(base.getPolizaId());
         d.setDescripcionTecnica(det.getProducto() != null ? det.getProducto().getDescripcionCompleta() : null);
         d.setCantidadElementos(det.getCantidadElementos());
