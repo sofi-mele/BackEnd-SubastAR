@@ -3,12 +3,12 @@ package com.subastar.service;
 import com.subastar.dto.cuentaCobro.CuentaCobroRequest;
 import com.subastar.dto.cuentaCobro.CuentaCobroResponse;
 import com.subastar.exception.ResourceNotFoundException;
-import com.subastar.model.CuentaBancaria;
-import com.subastar.repository.CuentaBancariaRepository;
+import com.subastar.model.CuentaCobro;
+import com.subastar.repository.CuentaCobroRepository;
 import com.subastar.repository.CredencialRepository;
-import com.subastar.repository.MedioPagoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,32 +17,34 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CuentaCobroService {
 
-    private final CuentaBancariaRepository cuentaBancariaRepository;
-    private final MedioPagoRepository medioPagoRepository;
+    private final CuentaCobroRepository cuentaCobroRepository;
     private final CredencialRepository credencialRepository;
 
     public List<CuentaCobroResponse> listar(String email) {
         Integer clienteId = getClienteId(email);
-        return medioPagoRepository.findByClienteIdentificadorAndEliminadoFalse(clienteId)
-                .stream()
-                .filter(mp -> "cuenta_bancaria".equals(mp.getTipo()))
-                .map(mp -> cuentaBancariaRepository.findByMedioPagoId(mp.getId()).orElse(null))
-                .filter(cb -> cb != null)
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        return cuentaCobroRepository.findByClienteId(clienteId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    @Transactional
     public CuentaCobroResponse crear(String email, CuentaCobroRequest req) {
-        throw new UnsupportedOperationException("Las cuentas de cobro se gestionan como medios de pago");
+        Integer clienteId = getClienteId(email);
+        CuentaCobro cc = new CuentaCobro();
+        cc.setClienteId(clienteId);
+        cc.setNombreBanco(req.getNombreBanco());
+        cc.setCbuIban(req.getCbuIban());
+        cc.setPais(req.getPais());
+        cc.setMoneda(req.getMoneda().toUpperCase());
+        return toResponse(cuentaCobroRepository.save(cc));
     }
 
-    private CuentaCobroResponse toResponse(CuentaBancaria cb) {
+    private CuentaCobroResponse toResponse(CuentaCobro cc) {
         CuentaCobroResponse r = new CuentaCobroResponse();
-        r.setId(cb.getMedioPagoId());
-        r.setNombreBanco(cb.getNombreBanco());
-        r.setCbuIban(cb.getCbuIban());
-        r.setPais(cb.getPaisBanco());
-        r.setMoneda(null);
+        r.setId(cc.getId());
+        r.setNombreBanco(cc.getNombreBanco());
+        r.setCbuIban(cc.getCbuIban());
+        r.setPais(cc.getPais());
+        r.setMoneda(cc.getMoneda());
         return r;
     }
 
