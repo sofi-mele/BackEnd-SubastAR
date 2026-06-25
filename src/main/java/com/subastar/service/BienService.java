@@ -416,17 +416,7 @@ public class BienService {
         r.setComision(det.getComision());
         r.setSubastaAsignada(det.getSubastaAsignada());
         r.setPolizaId(det.getPolizaId());
-        boolean rechazadoPorUsuario = Boolean.FALSE.equals(det.getAceptoCondiciones())
-                && "rechazado".equals(det.getEstadoSolicitud());
-        if (rechazadoPorUsuario) {
-            java.math.BigDecimal base = det.getPrecioBase() != null ? det.getPrecioBase() : det.getPrecioBaseSugerido();
-            r.setCostoDevolucion(base != null
-                    ? base.multiply(java.math.BigDecimal.valueOf(0.10))
-                    : java.math.BigDecimal.ZERO);
-            r.setCostoEnvio(null);
-        } else {
-            r.setCostoEnvio(det.getCostoEnvio());
-        }
+        r.setCostoDevolucion(det.getCostoEnvio());
         r.setAceptoCondiciones(det.getAceptoCondiciones());
         r.setUbicacionDeposito(det.getUbicacionDeposito() != null ? det.getUbicacionDeposito() : "Av. Corrientes 2300, CABA");
 

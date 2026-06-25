@@ -16,8 +16,6 @@ public class BienResumen {
     private BigDecimal comision;
     @JsonProperty("motivo_rechazo")
     private String motivoRechazo;
-    @JsonProperty("costo_envio")
-    private BigDecimal costoEnvio;
     @JsonProperty("costo_devolucion")
     private BigDecimal costoDevolucion;
     @JsonProperty("acepto_condiciones")
