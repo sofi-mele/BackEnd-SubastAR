@@ -13,6 +13,4 @@ public class AceptarBienRequest {
     @JsonProperty("comision")
     private BigDecimal comision;
 
-    @JsonProperty("costo_envio")
-    private BigDecimal costoEnvio;
 }

@@ -60,7 +60,7 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> rechazarBien(
             @PathVariable Integer id,
             @Valid @RequestBody RechazarBienRequest req) {
-        bienService.rechazarBien(id, req.getMotivo());
+        bienService.rechazarBien(id, req);
         return ResponseEntity.ok(Map.of("message", "Bien rechazado y notificación enviada al usuario."));
     }
 

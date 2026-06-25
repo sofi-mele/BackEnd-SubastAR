@@ -353,11 +353,12 @@ public class BienService {
     }
 
     @Transactional
-    public void rechazarBien(Integer productoId, String motivo) {
+    public void rechazarBien(Integer productoId, RechazarBienRequest req) {
         ProductoDetalle det = productoDetalleRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
         det.setEstadoSolicitud("rechazado");
-        det.setMotivoRechazo(motivo);
+        det.setMotivoRechazo(req.getMotivo());
+        det.setCostoEnvio(req.getCostoDevolucion());
         productoDetalleRepository.save(det);
         // la notificación la genera el trigger de BD al detectar el cambio de estado
     }
@@ -369,7 +370,6 @@ public class BienService {
         det.setEstadoSolicitud("aceptado");
         det.setPrecioBase(req.getPrecioBase());
         det.setComision(req.getComision());
-        det.setCostoEnvio(req.getCostoEnvio());
         productoDetalleRepository.save(det);
 
         Cliente cliente = clienteRepository.findById(det.getClienteId())
