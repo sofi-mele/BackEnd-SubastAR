@@ -22,6 +22,8 @@ public class BienSolicitudResponse {
     private Integer maximoFotosPermitidas;
     @JsonProperty("declaracion_propiedad_aceptada")
     private boolean declaracionPropiedadAceptada;
+    @JsonProperty("acepta_devolucion_con_cargo")
+    private boolean aceptaDevolucionConCargo;
     @JsonProperty("documentacion_adjunta")
     private boolean documentacionAdjunta;
     @JsonProperty("puede_confirmar")

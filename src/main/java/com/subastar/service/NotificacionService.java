@@ -117,6 +117,14 @@ public class NotificacionService {
         enviar(cliente, "bien", contenido);
     }
 
+    public void notificarDireccionEnvio(Cliente cliente, String nombreBien, String direccion) {
+        String contenido = "La empresa está interesada en tu bien \"" + nombreBien + "\".\n"
+                + "Por favor, envialo a la siguiente dirección para proceder con la inspección:\n"
+                + direccion + "\n"
+                + "Recordá que si el bien no es aceptado tras la inspección, la devolución es con cargo a tu cuenta.";
+        enviar(cliente, "bien", contenido);
+    }
+
     public void notificarInspeccionFisicaRequerida(Cliente cliente, String nombreBien) {
         String contenido = "Estamos interesados en tu bien \"" + nombreBien + "\".\n"
                 + "Para continuar, traelo a nuestro depósito: Corrientes 2300, CABA (lun-vie 9-17 hs).\n"

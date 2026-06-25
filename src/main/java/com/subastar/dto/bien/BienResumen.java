@@ -22,6 +22,8 @@ public class BienResumen {
     private Boolean aceptoCondiciones;
     @JsonProperty("ubicacion_deposito")
     private String ubicacionDeposito;
+    @JsonProperty("direccion_envio_inspeccion")
+    private String direccionEnvioInspeccion;
     @JsonProperty("poliza_id")
     private String polizaId;
 }
