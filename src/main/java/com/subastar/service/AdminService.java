@@ -149,9 +149,11 @@ public class AdminService {
     public void indicarDireccionEnvio(Integer bienId) {
         ProductoDetalle det = productoDetalleRepository.findById(bienId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
-        if (!"en_revision".equals(det.getEstadoSolicitud())) {
-            throw new BadRequestException("Solo se puede indicar la dirección de envío para bienes en estado 'en_revision'");
+        if (!"pendiente".equals(det.getEstadoSolicitud()) && !"en_revision".equals(det.getEstadoSolicitud())) {
+            throw new BadRequestException("Solo se puede indicar la dirección de envío para bienes en estado 'pendiente' o 'en_revision'");
         }
+        det.setEstadoSolicitud("en_revision");
+        productoDetalleRepository.save(det);
         Cliente cliente = clienteRepository.findById(det.getClienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
         notificacionService.notificarDireccionEnvio(cliente, det.getNombre(), DIRECCION_ENVIO);

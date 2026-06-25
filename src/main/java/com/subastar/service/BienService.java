@@ -287,7 +287,7 @@ public class BienService {
         det.setInformacionAdicional(sol.getInformacionAdicional());
         det.setPrecioBaseSugerido(sol.getPrecioBaseSugerido());
         det.setDivisaPrecioBaseSugerido(sol.getDivisaPrecioBaseSugerido());
-        det.setEstadoSolicitud("en_revision");
+        det.setEstadoSolicitud("pendiente");
         productoDetalleRepository.save(det);
 
         sol.setEstado("enviado_a_revision");
@@ -300,8 +300,8 @@ public class BienService {
         BienSolicitudEnviadaResponse resp = new BienSolicitudEnviadaResponse();
         resp.setCodigoSolicitud(sol.getCodigoSolicitud());
         resp.setCodigoBien("BIEN-" + producto.getIdentificador());
-        resp.setEstado("en_revision");
-        resp.setMessage("Tu bien fue enviado para revisión. Te notificaremos cuando la empresa complete la inspección y te informaremos la fecha, valor base y comisiones.");
+        resp.setEstado("pendiente");
+        resp.setMessage("Tu bien fue enviado. Te notificaremos cuando la empresa lo tome para revisión.");
         return resp;
     }
 
