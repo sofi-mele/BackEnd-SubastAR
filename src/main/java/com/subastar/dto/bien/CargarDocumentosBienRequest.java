@@ -9,4 +9,8 @@ public class CargarDocumentosBienRequest {
     @NotNull
     @JsonProperty("declara_propiedad")
     private Boolean declaraPropiedad;
+
+    @NotNull
+    @JsonProperty("acepta_devolucion_con_cargo")
+    private Boolean aceptaDevolucionConCargo;
 }

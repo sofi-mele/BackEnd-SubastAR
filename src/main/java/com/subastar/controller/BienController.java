@@ -73,11 +73,13 @@ public class BienController {
     public ResponseEntity<BienSolicitudResponse> cargarDocumentos(
             @PathVariable String codigo,
             @RequestPart("declara_propiedad") String declaraPropiedad,
+            @RequestPart("acepta_devolucion_con_cargo") String aceptaDevolucionConCargo,
             @RequestPart(value = "documentos", required = false) List<MultipartFile> docs,
             @AuthenticationPrincipal UserDetails user) {
-        log.info("Recibiendo petición de cargar documentos para solicitud {} por usuario {}. Declara: {}", codigo, user.getUsername(), declaraPropiedad);
+        log.info("Recibiendo petición de cargar documentos para solicitud {} por usuario {}. Declara: {}, AceptaDevolucion: {}", codigo, user.getUsername(), declaraPropiedad, aceptaDevolucionConCargo);
         CargarDocumentosBienRequest req = new CargarDocumentosBienRequest();
         req.setDeclaraPropiedad("true".equalsIgnoreCase(declaraPropiedad));
+        req.setAceptaDevolucionConCargo("true".equalsIgnoreCase(aceptaDevolucionConCargo));
         return ResponseEntity.ok(bienService.cargarDocumentos(user.getUsername(), codigo, req, docs));
     }
 

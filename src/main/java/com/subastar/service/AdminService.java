@@ -106,8 +106,14 @@ public class AdminService {
         if (!"aceptado".equals(det.getEstadoSolicitud())) {
             throw new BadRequestException("El bien debe estar en estado 'aceptado' para ser asignado a una subasta");
         }
+        if (!Boolean.TRUE.equals(det.getAceptoCondiciones())) {
+            throw new BadRequestException("El usuario aún no aceptó las condiciones del bien (precio base y comisiones)");
+        }
         if (det.getPrecioBase() == null || det.getComision() == null) {
             throw new BadRequestException("El bien no tiene precio_base o comision definidos");
+        }
+        if (itemCatalogoRepository.existsActivaByProductoId(det.getProductoId())) {
+            throw new BadRequestException("El bien ya se encuentra asignado a una subasta activa");
         }
 
         subastaRepository.findById(req.getSubastaId())
@@ -136,6 +142,19 @@ public class AdminService {
         Cliente cliente = clienteRepository.findById(det.getClienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
         notificacionService.notificarBienAsignadoASubasta(cliente, det.getNombre(), req.getSubastaId());
+    }
+
+    private static final String DIRECCION_ENVIO = "Av. Corrientes 2300, CABA";
+
+    public void indicarDireccionEnvio(Integer bienId) {
+        ProductoDetalle det = productoDetalleRepository.findById(bienId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado"));
+        if (!"en_revision".equals(det.getEstadoSolicitud())) {
+            throw new BadRequestException("Solo se puede indicar la dirección de envío para bienes en estado 'en_revision'");
+        }
+        Cliente cliente = clienteRepository.findById(det.getClienteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        notificacionService.notificarDireccionEnvio(cliente, det.getNombre(), DIRECCION_ENVIO);
     }
 
     public void asignarPoliza(Integer bienId, AsignarPolizaRequest req) {

@@ -126,7 +126,7 @@ public class PujaService {
                 .orElse(null);
         BigDecimal mejorOferta = mejorPujaAnterior != null ? mejorPujaAnterior.getImporte() : BigDecimal.ZERO;
 
-        boolean esOroOPlatino = "oro".equals(cliente.getCategoria()) || "platino".equals(cliente.getCategoria());
+        boolean sinTope = "oro".equals(subasta.getCategoria()) || "platino".equals(subasta.getCategoria());
 
         BigDecimal minimo = calcularPujaMinima(precioBase, mejorOferta);
 
@@ -134,10 +134,10 @@ public class PujaService {
             throw new BadRequestException("La puja mínima para este lote es " + minimo);
         }
 
-        if (!esOroOPlatino) {
+        if (!sinTope) {
             BigDecimal maximo = calcularPujaMaxima(precioBase, mejorOferta);
             if (req.getMonto().compareTo(maximo) > 0) {
-                throw new BadRequestException("La puja máxima permitida para tu categoría es " + maximo);
+                throw new BadRequestException("La puja máxima permitida para esta subasta es $" + maximo);
             }
         }
 

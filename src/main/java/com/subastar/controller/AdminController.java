@@ -84,6 +84,12 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Bien asignado a la subasta correctamente."));
     }
 
+    @PostMapping("/bienes/{id}/indicar-direccion-envio")
+    public ResponseEntity<Map<String, String>> indicarDireccionEnvio(@PathVariable Integer id) {
+        adminService.indicarDireccionEnvio(id);
+        return ResponseEntity.ok(Map.of("message", "Dirección de envío informada al usuario correctamente."));
+    }
+
     @PostMapping("/bienes/{id}/asignar-poliza")
     public ResponseEntity<Map<String, String>> asignarPoliza(
             @PathVariable Integer id,

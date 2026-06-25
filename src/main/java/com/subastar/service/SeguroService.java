@@ -48,11 +48,16 @@ public class SeguroService {
     }
 
     public PolizaResponse getPoliza(String email, String polizaId) {
-        // Valida que el usuario autenticado exista en el sistema.
-        getClienteId(email);
+        Integer clienteId = getClienteId(email);
         Seguro seguro = seguroRepository.findById(polizaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Póliza no encontrada"));
         SeguroExtra extra = seguroExtraRepository.findById(polizaId).orElse(null);
+
+        boolean esDuenio = productoDetalleRepository.existsByClienteIdAndPolizaId(clienteId, polizaId);
+        boolean esBeneficiario = extra != null && clienteId.equals(extra.getBeneficiarioId());
+        if (!esDuenio && !esBeneficiario) {
+            throw new ForbiddenException("La póliza no pertenece al usuario");
+        }
 
         return toPolizaResponseFrontend(seguro, extra);
     }

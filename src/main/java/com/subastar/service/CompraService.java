@@ -78,8 +78,10 @@ public class CompraService {
 
         List<Multa> multasPendientes = multaRepository.findByClienteIdentificadorAndEstado(clienteId, "pendiente");
         for (Multa multa : multasPendientes) {
-            multa.setEstado("cancelada");
-            multaRepository.save(multa);
+            if (compraId.equals(multa.getRegistroId())) {
+                multa.setEstado("cancelada");
+                multaRepository.save(multa);
+            }
         }
 
         medioPagoService.recalcularCategoria(clienteId);

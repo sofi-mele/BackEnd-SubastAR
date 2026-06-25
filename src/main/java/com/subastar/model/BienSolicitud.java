@@ -58,6 +58,9 @@ public class BienSolicitud {
     @Column(name = "declara_propiedad", nullable = false)
     private boolean declaraPropiedad;
 
+    @Column(name = "acepta_devolucion_con_cargo", nullable = false)
+    private boolean aceptaDevolucionConCargo;
+
     @Column(name = "producto_id")
     private Integer productoId;
 

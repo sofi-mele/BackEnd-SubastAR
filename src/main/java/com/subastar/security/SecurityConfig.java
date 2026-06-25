@@ -52,7 +52,7 @@ public class SecurityConfig {
                         "/auth/completar-registro", "/auth/login", "/auth/reenviar-codigo",
                         "/auth/recuperar-password", "/auth/recuperar-password/confirmar",
                         "/auth/registro-pendiente/cancelar").permitAll()
-                .requestMatchers("/admin/**").authenticated()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/subastas/*/resultado/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/subastas", "/subastas/**", "/fotos/**", "/paises", "/divisas").permitAll()
                 .anyRequest().authenticated()
