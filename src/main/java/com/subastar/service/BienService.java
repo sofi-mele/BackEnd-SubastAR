@@ -418,7 +418,7 @@ public class BienService {
         r.setPolizaId(det.getPolizaId());
         r.setCostoEnvio(det.getCostoEnvio());
         r.setAceptoCondiciones(det.getAceptoCondiciones());
-        r.setUbicacionDeposito(det.getUbicacionDeposito());
+        r.setUbicacionDeposito(det.getUbicacionDeposito() != null ? det.getUbicacionDeposito() : "Av. Corrientes 2300, CABA");
 
         if (r.getPrecioBase() == null || r.getComision() == null || r.getSubastaAsignada() == null) {
             itemCatalogoRepository.findAll().stream()
