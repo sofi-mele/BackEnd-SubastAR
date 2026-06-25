@@ -1,3 +1,2 @@
--- Requiere que el usuario acepte devolucion con cargo antes de confirmar solicitud
-ALTER TABLE bien_solicitudes
-    ADD acepta_devolucion_con_cargo BIT NOT NULL DEFAULT 0;
+-- (migracion vacia - los campos de esta version se manejan como @Transient en el modelo)
+SELECT 1;

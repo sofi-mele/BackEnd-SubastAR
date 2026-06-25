@@ -192,8 +192,8 @@ public class BienService {
         if (Boolean.TRUE.equals(req.getDeclaraPropiedad())) {
             sol.setDeclaraPropiedad(true);
         }
-        if (Boolean.TRUE.equals(req.getAceptaDevolucionConCargo())) {
-            sol.setAceptaDevolucionConCargo(true);
+        if (!Boolean.TRUE.equals(req.getAceptaDevolucionConCargo())) {
+            throw new BadRequestException("Debe aceptar que la devolución del bien, en caso de no ser aceptado, es con cargo al usuario");
         }
 
         if (docs != null) {
@@ -243,7 +243,6 @@ public class BienService {
         int fotos = bienSolicitudArchivoRepository.countBySolicitudIdAndTipoArchivo(sol.getId(), "foto");
         if (fotos < MIN_FOTOS) throw new BadRequestException("Se requieren al menos " + MIN_FOTOS + " fotos");
         if (!sol.isDeclaraPropiedad()) throw new BadRequestException("Debe aceptar la declaración de propiedad");
-        if (!sol.isAceptaDevolucionConCargo()) throw new BadRequestException("Debe aceptar que la devolución del bien, en caso de no ser aceptado, es con cargo al usuario");
         if (sol.getNombre() == null) throw new BadRequestException("Los datos del bien son incompletos");
 
         Empleado revisor = empleadoRepository.findAll().stream().findFirst()
@@ -544,7 +543,7 @@ public class BienService {
         r.setAceptaDevolucionConCargo(sol.isAceptaDevolucionConCargo());
         int docsCount = bienSolicitudArchivoRepository.countBySolicitudIdAndTipoArchivo(sol.getId(), "documento");
         r.setDocumentacionAdjunta(docsCount > 0);
-        r.setPuedeConfirmar(r.isDatosCompletos() && fotosCount >= MIN_FOTOS && sol.isDeclaraPropiedad() && sol.isAceptaDevolucionConCargo());
+        r.setPuedeConfirmar(r.isDatosCompletos() && fotosCount >= MIN_FOTOS && sol.isDeclaraPropiedad());
 
         if (sol.getNombre() != null) {
             BienSolicitudResponse.BienDatosResumen bien = new BienSolicitudResponse.BienDatosResumen();
