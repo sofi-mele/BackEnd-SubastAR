@@ -26,15 +26,20 @@ public class NotificacionService {
     private final ApplicationEventPublisher eventPublisher;
 
     public void notificarGanadorSubasta(Cliente cliente, String nombreItem,
-                                        BigDecimal importePujado, BigDecimal comision) {
+                                        BigDecimal importePujado, BigDecimal comision, BigDecimal costoEnvio) {
         BigDecimal totalComision = comision != null ? comision : BigDecimal.ZERO;
-        BigDecimal total = importePujado.add(totalComision);
+        BigDecimal envio = costoEnvio != null ? costoEnvio : BigDecimal.ZERO;
+        BigDecimal total = importePujado.add(totalComision).add(envio);
+        String lineaEnvio = costoEnvio != null
+                ? "Costo de envío a tu dirección declarada: $" + formatMonto(costoEnvio) + "\n"
+                : "Costo de envío a tu dirección declarada: a confirmar por la empresa.\n";
         String contenido = "¡Ganaste el ítem \"" + nombreItem + "\"!\n"
                 + "Importe ofertado: $" + formatMonto(importePujado) + "\n"
                 + "Comisión: $" + formatMonto(totalComision) + "\n"
+                + lineaEnvio
                 + "Total a pagar: $" + formatMonto(total) + "\n"
-                + "El costo de envío a tu dirección declarada se calculará al momento de procesar la entrega.\n"
-                + "Podés regularizar tu pago desde 'Mis compras'.";
+                + "Podés regularizar tu pago desde 'Mis compras'.\n"
+                + "Nota: si retirás el bien personalmente, perdés la cobertura del seguro asociado.";
         enviar(cliente, "compra", contenido);
     }
 

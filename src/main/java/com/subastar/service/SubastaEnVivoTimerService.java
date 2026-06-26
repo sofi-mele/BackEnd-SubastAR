@@ -20,6 +20,7 @@ import com.subastar.repository.DuenioRepository;
 import com.subastar.repository.ItemCatalogoRepository;
 import com.subastar.repository.PujoExtraRepository;
 import com.subastar.repository.PujoRepository;
+import com.subastar.repository.ProductoDetalleRepository;
 import com.subastar.repository.ProductoRepository;
 import com.subastar.repository.RegistroDeSubastaRepository;
 import com.subastar.repository.SubastaExtraRepository;
@@ -60,6 +61,7 @@ public class SubastaEnVivoTimerService {
     private final ClienteRepository clienteRepository;
     private final DuenioRepository duenioRepository;
     private final ProductoRepository productoRepository;
+    private final ProductoDetalleRepository productoDetalleRepository;
     private final NotificacionService notificacionService;
     private final RealtimeEventPublisher realtimeEventPublisher;
     private final TransactionTemplate transactionTemplate;
@@ -368,8 +370,12 @@ public class SubastaEnVivoTimerService {
         String itemName = item.getProducto().getDescripcionCatalogo() != null
                 ? item.getProducto().getDescripcionCatalogo()
                 : "Item #" + item.getIdentificador();
+        BigDecimal costoEnvio = productoDetalleRepository
+                .findById(item.getProducto().getIdentificador())
+                .map(det -> det.getCostoEnvio())
+                .orElse(null);
         notificacionService.notificarGanadorSubasta(
-                winner.getAsistente().getCliente(), itemName, winner.getImporte(), item.getComision());
+                winner.getAsistente().getCliente(), itemName, winner.getImporte(), item.getComision(), costoEnvio);
     }
 
     private void publishLotChanged(Integer subastaId, ItemCatalogo item, int secondsLeft) {
