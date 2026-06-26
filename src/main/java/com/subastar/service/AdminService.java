@@ -30,6 +30,7 @@ public class AdminService {
     private final ProductoRepository productoRepository;
     private final ClienteRepository clienteRepository;
     private final SeguroRepository seguroRepository;
+    private final SeguroExtraRepository seguroExtraRepository;
     private final NotificacionService notificacionService;
 
     public Integer crearSubasta(CrearSubastaRequest req) {
@@ -176,5 +177,21 @@ public class AdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado para el bien " + bienId));
         producto.setSeguroNroPoliza(req.getNumeroPoliza());
         productoRepository.save(producto);
+
+        boolean tieneExtras = req.getCobertura() != null || req.getVigenciaDesde() != null
+                || req.getVigenciaHasta() != null || req.getContactoTelefono() != null
+                || req.getContactoEmail() != null || req.getContactoWeb() != null;
+        if (tieneExtras) {
+            SeguroExtra extra = seguroExtraRepository.findById(req.getNumeroPoliza())
+                    .orElse(new SeguroExtra());
+            extra.setPolizaId(req.getNumeroPoliza());
+            extra.setCobertura(req.getCobertura());
+            extra.setVigenciaDesde(req.getVigenciaDesde());
+            extra.setVigenciaHasta(req.getVigenciaHasta());
+            extra.setContactoTelefono(req.getContactoTelefono());
+            extra.setContactoEmail(req.getContactoEmail());
+            extra.setContactoWeb(req.getContactoWeb());
+            seguroExtraRepository.save(extra);
+        }
     }
 }
