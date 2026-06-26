@@ -366,7 +366,10 @@ public class BienService {
         det.setMotivoRechazo(req.getMotivo());
         det.setCostoEnvio(req.getCostoDevolucion());
         productoDetalleRepository.save(det);
-        // la notificación la genera el trigger de BD al detectar el cambio de estado
+
+        Cliente cliente = clienteRepository.findById(det.getClienteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        notificacionService.notificarBienRechazado(cliente, det.getNombre(), req.getMotivo());
     }
 
     @Transactional
