@@ -8,6 +8,7 @@ import com.subastar.model.*;
 import com.subastar.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,27 +28,33 @@ public class SeguroService {
     private final ProductoDetalleRepository productoDetalleRepository;
     private final CredencialRepository credencialRepository;
     private final ClienteRepository clienteRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     public List<PolizaResponse> listarMisPolizas(String email) {
         Integer clienteId = getClienteId(email);
         log.info("[Seguros] listarMisPolizas clienteId={}", clienteId);
 
-        // Pólizas como comprador (beneficiario en seguros_extra)
         java.util.Set<String> polizasIds = new java.util.LinkedHashSet<>();
         java.util.Map<String, SeguroExtra> extrasMap = new java.util.LinkedHashMap<>();
+
+        // Beneficiario en seguros_extra
         seguroExtraRepository.findByBeneficiarioId(clienteId)
                 .forEach(e -> { polizasIds.add(e.getPolizaId()); extrasMap.put(e.getPolizaId(), e); });
-        log.info("[Seguros] polizas como beneficiario: {}", polizasIds);
 
-        // Camino 1: productos_detalle.poliza_id (filtro Java)
-        productoDetalleRepository.findByClienteId(clienteId).stream()
-                .filter(d -> d.getPolizaId() != null && !d.getPolizaId().isBlank())
-                .forEach(d -> polizasIds.add(d.getPolizaId()));
-
-        // Camino 2: productos.seguro via JOIN con productos_detalle.cliente_id
-        productoRepository.findPolizaIdsByClienteId(clienteId).forEach(polizasIds::add);
-
-        log.info("[Seguros] polizasIds totales para clienteId={}: {}", clienteId, polizasIds);
+        // SQL directo: poliza_id en productos_detalle + seguro en productos, ambos por cliente_id
+        String sql = """
+                SELECT DISTINCT pd.poliza_id
+                FROM productos_detalle pd
+                WHERE pd.cliente_id = ? AND pd.poliza_id IS NOT NULL
+                UNION
+                SELECT DISTINCT p.seguro
+                FROM productos p
+                INNER JOIN productos_detalle pd2 ON pd2.producto_id = p.identificador
+                WHERE pd2.cliente_id = ? AND p.seguro IS NOT NULL
+                """;
+        List<String> fromJdbc = jdbcTemplate.queryForList(sql, String.class, clienteId, clienteId);
+        log.info("[Seguros] polizaIds JDBC para clienteId={}: {}", clienteId, fromJdbc);
+        polizasIds.addAll(fromJdbc);
 
         return polizasIds.stream()
                 .map(polizaId -> seguroRepository.findById(polizaId)
