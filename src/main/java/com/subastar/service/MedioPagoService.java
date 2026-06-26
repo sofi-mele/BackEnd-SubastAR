@@ -205,6 +205,7 @@ public class MedioPagoService {
         r.setDescripcion(mp.getDescripcion());
         r.setVerificado(mp.isVerificado());
         r.setRechazado(mp.isRechazado());
+        r.setEstado(mp.isRechazado() ? "rechazado" : mp.isVerificado() ? "verificado" : "pendiente");
         if ("cheque_certificado".equals(mp.getTipo())) {
             chequeCertificadoRepository.findByMedioPagoId(mp.getId())
                     .ifPresent(ch -> r.setMontoDisponible(ch.getMontoCertificado()));

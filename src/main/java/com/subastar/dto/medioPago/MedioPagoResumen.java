@@ -11,6 +11,7 @@ public class MedioPagoResumen {
     private String descripcion;
     private boolean verificado;
     private boolean rechazado;
+    private String estado;
     @JsonProperty("monto_disponible")
     private BigDecimal montoDisponible;
 }
