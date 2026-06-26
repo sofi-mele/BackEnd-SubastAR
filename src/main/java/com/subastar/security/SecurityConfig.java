@@ -54,6 +54,7 @@ public class SecurityConfig {
                         "/auth/registro-pendiente/cancelar").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/subastas/*/resultado/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/subastas/*/en-vivo").authenticated()
                 .requestMatchers(HttpMethod.GET, "/subastas", "/subastas/**", "/fotos/**", "/paises", "/divisas").permitAll()
                 .anyRequest().authenticated()
             )

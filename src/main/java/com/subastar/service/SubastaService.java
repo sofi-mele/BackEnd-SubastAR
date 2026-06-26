@@ -31,6 +31,8 @@ public class SubastaService {
     private final ProductoDetalleRepository productoDetalleRepository;
     private final FotoRepository fotoRepository;
     private final CredencialRepository credencialRepository;
+    private final ClienteRepository clienteRepository;
+    private final MedioPagoRepository medioPagoRepository;
     private final SubastaEnVivoTimerService timerService;
     private final BienSolicitudRepository bienSolicitudRepository;
     private final BienSolicitudArchivoRepository bienSolicitudArchivoRepository;
@@ -75,9 +77,24 @@ public class SubastaService {
         return toItemResponse(item, autenticado);
     }
 
-    public EstadoEnVivoResponse getEnVivo(Integer subastaId) {
+    public EstadoEnVivoResponse getEnVivo(Integer subastaId, String email) {
         Subasta s = subastaRepository.findById(subastaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subasta no encontrada"));
+
+        Credencial cred = credencialRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        Cliente cliente = clienteRepository.findById(cred.getPersonaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+
+        if (!categoriaHabilita(cliente.getCategoria(), s.getCategoria())) {
+            throw new com.subastar.exception.ForbiddenException(
+                    "Tu categoría '" + cliente.getCategoria() + "' no te permite acceder a subastas de categoría '" + s.getCategoria() + "'");
+        }
+
+        boolean tieneMedioPago = medioPagoRepository.existsByClienteIdentificadorAndEliminadoFalse(cliente.getIdentificador());
+        if (!tieneMedioPago) {
+            throw new com.subastar.exception.ForbiddenException("Necesitás tener al menos un medio de pago registrado para acceder a la subasta");
+        }
         SubastaExtra extra = subastaExtraRepository.findBySubastaId(subastaId).orElse(null);
 
         EstadoEnVivoResponse resp = new EstadoEnVivoResponse();
@@ -183,6 +200,23 @@ public class SubastaService {
 
     private boolean matchEstadoApi(Subasta s, String estadoApi) {
         return estadoApi.equals("todas") || estadoApi.equals(calcEstadoApi(s));
+    }
+
+    private boolean categoriaHabilita(String categoriaCliente, String categoriaSubasta) {
+        if (categoriaSubasta == null) return true;
+        return nivelCategoria(categoriaCliente) >= nivelCategoria(categoriaSubasta);
+    }
+
+    private int nivelCategoria(String categoria) {
+        if (categoria == null) return 0;
+        return switch (categoria.toLowerCase()) {
+            case "comun"    -> 1;
+            case "especial" -> 2;
+            case "plata"    -> 3;
+            case "oro"      -> 4;
+            case "platino"  -> 5;
+            default         -> 0;
+        };
     }
 
     ItemCatalogoResponse toItemResponse(ItemCatalogo item, boolean autenticado) {

@@ -53,8 +53,10 @@ public class SubastaController {
     }
 
     @GetMapping("/{id}/en-vivo")
-    public ResponseEntity<EstadoEnVivoResponse> getEnVivo(@PathVariable Integer id) {
-        return ResponseEntity.ok(subastaService.getEnVivo(id));
+    public ResponseEntity<EstadoEnVivoResponse> getEnVivo(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(subastaService.getEnVivo(id, user.getUsername()));
     }
 
     @PostMapping("/{id}/pujas")
