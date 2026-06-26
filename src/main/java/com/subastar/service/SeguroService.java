@@ -39,13 +39,15 @@ public class SeguroService {
                 .forEach(e -> { polizasIds.add(e.getPolizaId()); extrasMap.put(e.getPolizaId(), e); });
         log.info("[Seguros] polizas como beneficiario: {}", polizasIds);
 
-        // Pólizas como dueño de un bien (via productos_detalle.cliente_id, filtro Java)
+        // Camino 1: productos_detalle.poliza_id (filtro Java)
         productoDetalleRepository.findByClienteId(clienteId).stream()
                 .filter(d -> d.getPolizaId() != null && !d.getPolizaId().isBlank())
-                .forEach(d -> {
-                    log.info("[Seguros] bien {} tiene polizaId={}", d.getProductoId(), d.getPolizaId());
-                    polizasIds.add(d.getPolizaId());
-                });
+                .forEach(d -> polizasIds.add(d.getPolizaId()));
+
+        // Camino 2: productos.seguro via JOIN con productos_detalle.cliente_id
+        productoRepository.findPolizaIdsByClienteId(clienteId).forEach(polizasIds::add);
+
+        log.info("[Seguros] polizasIds totales para clienteId={}: {}", clienteId, polizasIds);
 
         return polizasIds.stream()
                 .map(polizaId -> seguroRepository.findById(polizaId)

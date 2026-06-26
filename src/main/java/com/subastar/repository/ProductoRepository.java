@@ -11,6 +11,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     List<Producto> findByDuenioIdentificador(Integer duenioId);
     List<Producto> findBySeguroNroPoliza(String seguroNroPoliza);
 
-    @Query("SELECT p FROM Producto p JOIN ProductoDetalle pd ON pd.productoId = p.identificador WHERE pd.clienteId = :clienteId AND p.seguroNroPoliza IS NOT NULL")
-    List<Producto> findByClienteIdWithPoliza(@Param("clienteId") Integer clienteId);
+    @Query("SELECT DISTINCT p.seguroNroPoliza FROM Producto p, ProductoDetalle pd WHERE pd.productoId = p.identificador AND pd.clienteId = :clienteId AND p.seguroNroPoliza IS NOT NULL")
+    List<String> findPolizaIdsByClienteId(@Param("clienteId") Integer clienteId);
 }
