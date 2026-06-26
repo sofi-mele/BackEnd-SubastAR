@@ -107,6 +107,16 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Medio de pago verificado correctamente."));
     }
 
+    @PostMapping("/medios-pago/{id}/rechazar")
+    public ResponseEntity<Map<String, String>> rechazarMedioPago(@PathVariable Integer id) {
+        MedioPago medioPago = medioPagoRepository.findById(id)
+                .orElseThrow(() -> new com.subastar.exception.ResourceNotFoundException("Medio de pago no encontrado"));
+        medioPago.setRechazado(true);
+        medioPago.setVerificado(false);
+        medioPagoRepository.save(medioPago);
+        return ResponseEntity.ok(Map.of("message", "Medio de pago rechazado correctamente."));
+    }
+
     @PostMapping("/subastas/{subastaId}/iniciar-lote")
     public ResponseEntity<Map<String, Object>> iniciarLote(@PathVariable Integer subastaId) {
         SubastaExtra extra = subastaExtraRepository.findBySubastaId(subastaId)
