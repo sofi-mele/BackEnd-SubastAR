@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +32,8 @@ public class AdminService {
     private final ClienteRepository clienteRepository;
     private final SeguroRepository seguroRepository;
     private final SeguroExtraRepository seguroExtraRepository;
+    private final CompraExtraRepository compraExtraRepository;
+    private final RegistroDeSubastaRepository registroDeSubastaRepository;
     private final NotificacionService notificacionService;
 
     public Integer crearSubasta(CrearSubastaRequest req) {
@@ -193,5 +196,24 @@ public class AdminService {
             extra.setContactoWeb(req.getContactoWeb());
             seguroExtraRepository.save(extra);
         }
+    }
+
+    public void cargarCostoEnvio(Integer compraId, BigDecimal costoEnvio) {
+        RegistroDeSubasta registro = registroDeSubastaRepository.findById(compraId)
+                .orElseThrow(() -> new ResourceNotFoundException("Compra no encontrada"));
+
+        CompraExtra extra = compraExtraRepository.findByRegistroId(compraId)
+                .orElseThrow(() -> new ResourceNotFoundException("Detalle de compra no encontrado"));
+
+        extra.setCostoEnvio(costoEnvio);
+        compraExtraRepository.save(extra);
+
+        Cliente cliente = registro.getCliente();
+        String nombreItem = registro.getProducto().getDescripcionCatalogo() != null
+                ? registro.getProducto().getDescripcionCatalogo()
+                : "Producto #" + registro.getProducto().getIdentificador();
+
+        notificacionService.notificarCostoEnvio(cliente, nombreItem,
+                registro.getImporte(), registro.getComision(), costoEnvio);
     }
 }

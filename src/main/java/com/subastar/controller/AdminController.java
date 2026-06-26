@@ -98,6 +98,18 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Póliza asignada al bien correctamente."));
     }
 
+    @PostMapping("/compras/{id}/costo-envio")
+    public ResponseEntity<Map<String, String>> cargarCostoEnvio(
+            @PathVariable Integer id,
+            @RequestBody Map<String, java.math.BigDecimal> body) {
+        java.math.BigDecimal costoEnvio = body.get("costo_envio");
+        if (costoEnvio == null || costoEnvio.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new com.subastar.exception.BadRequestException("El costo de envío debe ser mayor a 0");
+        }
+        adminService.cargarCostoEnvio(id, costoEnvio);
+        return ResponseEntity.ok(Map.of("message", "Costo de envío registrado y notificación enviada al cliente."));
+    }
+
     @PostMapping("/medios-pago/{id}/verificar")
     public ResponseEntity<Map<String, String>> verificarMedioPago(@PathVariable Integer id) {
         MedioPago medioPago = medioPagoRepository.findById(id)

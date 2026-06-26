@@ -43,6 +43,20 @@ public class NotificacionService {
         enviar(cliente, "compra", contenido);
     }
 
+    public void notificarCostoEnvio(Cliente cliente, String nombreItem,
+                                    BigDecimal importePujado, BigDecimal comision, BigDecimal costoEnvio) {
+        BigDecimal totalComision = comision != null ? comision : BigDecimal.ZERO;
+        BigDecimal total = importePujado.add(totalComision).add(costoEnvio);
+        String contenido = "Se confirmó el costo de envío para tu compra \"" + nombreItem + "\".\n"
+                + "Importe ofertado: $" + formatMonto(importePujado) + "\n"
+                + "Comisión: $" + formatMonto(totalComision) + "\n"
+                + "Costo de envío: $" + formatMonto(costoEnvio) + "\n"
+                + "Total a pagar: $" + formatMonto(total) + "\n"
+                + "Podés regularizar tu pago desde 'Mis compras'.\n"
+                + "Nota: si retirás el bien personalmente, perdés la cobertura del seguro asociado.";
+        enviar(cliente, "compra", contenido);
+    }
+
     public void notificarPagoRegularizado(Cliente cliente, String nombreItem, BigDecimal total) {
         String contenido = "Tu pago por el ítem \"" + nombreItem + "\" fue registrado correctamente.\n"
                 + "Total abonado: $" + formatMonto(total);
