@@ -7,6 +7,7 @@ import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.*;
 import com.subastar.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -28,16 +30,20 @@ public class SeguroService {
 
     public List<PolizaResponse> listarMisPolizas(String email) {
         Integer clienteId = getClienteId(email);
+        log.info("[Seguros] listarMisPolizas clienteId={}", clienteId);
 
         // Pólizas como comprador (beneficiario en seguros_extra)
         java.util.Set<String> polizasIds = new java.util.LinkedHashSet<>();
         java.util.Map<String, SeguroExtra> extrasMap = new java.util.LinkedHashMap<>();
         seguroExtraRepository.findByBeneficiarioId(clienteId)
                 .forEach(e -> { polizasIds.add(e.getPolizaId()); extrasMap.put(e.getPolizaId(), e); });
+        log.info("[Seguros] polizas como beneficiario: {}", polizasIds);
 
         // Pólizas como dueño de un bien publicado (productos_detalle.poliza_id)
-        productoDetalleRepository.findByClienteIdAndPolizaIdIsNotNull(clienteId)
-                .forEach(det -> polizasIds.add(det.getPolizaId()));
+        var detConPoliza = productoDetalleRepository.findByClienteIdAndPolizaIdIsNotNull(clienteId);
+        log.info("[Seguros] productos_detalle con poliza para clienteId={}: {}", clienteId,
+                detConPoliza.stream().map(d -> d.getPolizaId() + "(bien:" + d.getProductoId() + ")").toList());
+        detConPoliza.forEach(det -> polizasIds.add(det.getPolizaId()));
 
         return polizasIds.stream()
                 .map(polizaId -> seguroRepository.findById(polizaId)
