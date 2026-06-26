@@ -39,11 +39,13 @@ public class SeguroService {
                 .forEach(e -> { polizasIds.add(e.getPolizaId()); extrasMap.put(e.getPolizaId(), e); });
         log.info("[Seguros] polizas como beneficiario: {}", polizasIds);
 
-        // Pólizas como dueño de un bien (JOIN productos + productos_detalle por cliente_id)
-        var productosConPoliza = productoRepository.findByClienteIdWithPoliza(clienteId);
-        log.info("[Seguros] productos con poliza para clienteId={}: {}", clienteId,
-                productosConPoliza.stream().map(p -> p.getSeguroNroPoliza() + "(prod:" + p.getIdentificador() + ")").toList());
-        productosConPoliza.forEach(p -> polizasIds.add(p.getSeguroNroPoliza()));
+        // Pólizas como dueño de un bien (via productos_detalle.cliente_id, filtro Java)
+        productoDetalleRepository.findByClienteId(clienteId).stream()
+                .filter(d -> d.getPolizaId() != null && !d.getPolizaId().isBlank())
+                .forEach(d -> {
+                    log.info("[Seguros] bien {} tiene polizaId={}", d.getProductoId(), d.getPolizaId());
+                    polizasIds.add(d.getPolizaId());
+                });
 
         return polizasIds.stream()
                 .map(polizaId -> seguroRepository.findById(polizaId)
