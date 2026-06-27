@@ -2,6 +2,7 @@ package com.subastar.controller;
 
 import com.subastar.dto.compra.CompraDetalle;
 import com.subastar.dto.compra.CompraResumen;
+import com.subastar.dto.compra.PreferenciaEntregaRequest;
 import com.subastar.dto.compra.RegularizarPagoRequest;
 import com.subastar.service.CompraService;
 import jakarta.validation.Valid;
@@ -48,6 +49,15 @@ public class CompraController {
             @Valid @RequestBody RegularizarPagoRequest req,
             @AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(compraService.regularizarPago(user.getUsername(), id, req));
+    }
+
+    @PostMapping("/{id}/preferencia-entrega")
+    public ResponseEntity<Map<String, String>> preferenciaEntrega(
+            @PathVariable Integer id,
+            @Valid @RequestBody PreferenciaEntregaRequest req,
+            @AuthenticationPrincipal UserDetails user) {
+        compraService.registrarPreferenciaEntrega(user.getUsername(), id, req);
+        return ResponseEntity.ok(Map.of("message", "Preferencia de entrega registrada correctamente."));
     }
 
     @GetMapping("/{id}/factura")

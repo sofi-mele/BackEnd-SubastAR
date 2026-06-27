@@ -177,6 +177,43 @@ public class CompraService {
         }
     }
 
+    public void registrarPreferenciaEntrega(String email, Integer compraId, com.subastar.dto.compra.PreferenciaEntregaRequest req) {
+        Integer clienteId = getClienteId(email);
+        RegistroDeSubasta registro = registroRepository.findById(compraId)
+                .orElseThrow(() -> new ResourceNotFoundException("Compra no encontrada"));
+        if (!registro.getCliente().getIdentificador().equals(clienteId)) {
+            throw new com.subastar.exception.ForbiddenException("La compra no pertenece al usuario");
+        }
+
+        CompraExtra extra = compraExtraRepository.findByRegistroId(compraId)
+                .orElseThrow(() -> new ResourceNotFoundException("Detalle de compra no encontrado"));
+
+        String tipo = req.getTipo();
+        if (!"retiro".equals(tipo) && !"envio".equals(tipo)) {
+            throw new com.subastar.exception.BadRequestException("El tipo debe ser 'retiro' o 'envio'");
+        }
+        if ("envio".equals(tipo) && (req.getDireccion() == null || req.getDireccion().isBlank())) {
+            throw new com.subastar.exception.BadRequestException("Debés indicar la dirección de entrega");
+        }
+
+        extra.setEstadoEntrega(tipo);
+        if ("envio".equals(tipo)) {
+            extra.setDireccionEntrega(req.getDireccion());
+        }
+        compraExtraRepository.save(extra);
+
+        Cliente cliente = registro.getCliente();
+        String nombreItem = registro.getProducto().getDescripcionCatalogo() != null
+                ? registro.getProducto().getDescripcionCatalogo()
+                : "Producto #" + registro.getProducto().getIdentificador();
+
+        if ("retiro".equals(tipo)) {
+            notificacionService.notificarRetiroPersonal(cliente, nombreItem);
+        } else {
+            notificacionService.notificarConfirmacionEnvio(cliente, nombreItem, req.getDireccion());
+        }
+    }
+
     private Integer getClienteId(String email) {
         return credencialRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"))

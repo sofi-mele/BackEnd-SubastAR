@@ -57,6 +57,22 @@ public class NotificacionService {
         enviar(cliente, "compra", contenido);
     }
 
+    public void notificarRetiroPersonal(Cliente cliente, String nombreItem) {
+        String contenido = "Confirmaste el retiro personal de \"" + nombreItem + "\".\n"
+                + "Podés pasar a retirarlo por nuestro depósito:\n"
+                + "Av. Corrientes 2300, CABA\n"
+                + "Lunes a viernes de 9 a 18 hs.\n"
+                + "Recordá que al retirar el bien personalmente perdés la cobertura del seguro asociado.";
+        enviar(cliente, "compra", contenido);
+    }
+
+    public void notificarConfirmacionEnvio(Cliente cliente, String nombreItem, String direccion) {
+        String contenido = "Confirmaste el envío de \"" + nombreItem + "\" a:\n"
+                + direccion + "\n"
+                + "La empresa calculará el costo de envío y te notificaremos con el total definitivo a pagar.";
+        enviar(cliente, "compra", contenido);
+    }
+
     public void notificarPagoRegularizado(Cliente cliente, String nombreItem, BigDecimal total) {
         String contenido = "Tu pago por el ítem \"" + nombreItem + "\" fue registrado correctamente.\n"
                 + "Total abonado: $" + formatMonto(total);
