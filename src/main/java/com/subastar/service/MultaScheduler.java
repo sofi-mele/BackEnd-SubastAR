@@ -3,6 +3,7 @@ package com.subastar.service;
 import com.subastar.model.CompraExtra;
 import com.subastar.model.Multa;
 import com.subastar.model.RegistroDeSubasta;
+import com.subastar.repository.ClienteRepository;
 import com.subastar.repository.CompraExtraRepository;
 import com.subastar.repository.MultaRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class MultaScheduler {
 
     private final CompraExtraRepository compraExtraRepository;
     private final MultaRepository multaRepository;
+    private final ClienteRepository clienteRepository;
     private final NotificacionService notificacionService;
 
     @Transactional
@@ -48,6 +50,10 @@ public class MultaScheduler {
                 multa.setMonto(monto);
                 multa.setEstado("pendiente");
                 multaRepository.save(multa);
+
+                registro.getCliente().setAdmitido("no");
+                clienteRepository.save(registro.getCliente());
+
                 notificacionService.notificarMulta(
                         registro.getCliente(), monto, "Pago no realizado dentro de las 72 horas");
 

@@ -7,6 +7,7 @@ import com.subastar.exception.ForbiddenException;
 import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.*;
 import com.subastar.repository.*;
+import com.subastar.model.Cliente;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class CompraService {
     private final MultaRepository multaRepository;
     private final MedioPagoRepository medioPagoRepository;
     private final CredencialRepository credencialRepository;
+    private final ClienteRepository clienteRepository;
     private final NotificacionService notificacionService;
     private final SeguroRepository seguroRepository;
     private final SeguroExtraRepository seguroExtraRepository;
@@ -82,6 +84,15 @@ public class CompraService {
                 multa.setEstado("cancelada");
                 multaRepository.save(multa);
             }
+        }
+
+        boolean sinMultasRestantes = multaRepository
+                .findByClienteIdentificadorAndEstado(clienteId, "pendiente").isEmpty();
+        if (sinMultasRestantes) {
+            clienteRepository.findById(clienteId).ifPresent(c -> {
+                c.setAdmitido("si");
+                clienteRepository.save(c);
+            });
         }
 
         medioPagoService.recalcularCategoria(clienteId);

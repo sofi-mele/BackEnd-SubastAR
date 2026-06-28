@@ -2,6 +2,7 @@ package com.subastar.service;
 
 import com.subastar.dto.chat.*;
 import com.subastar.exception.BadRequestException;
+import com.subastar.exception.ForbiddenException;
 import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.ChatMensaje;
 import com.subastar.model.Cliente;
@@ -148,6 +149,9 @@ public class ChatService {
         }
         Cliente cliente = clienteRepository.findById(getClienteId(email))
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        if (!"si".equals(cliente.getAdmitido())) {
+            throw new ForbiddenException("Tu cuenta no está habilitada para usar los servicios de la aplicación");
+        }
         ChatMensaje mensaje = new ChatMensaje();
         mensaje.setCliente(cliente);
         mensaje.setTipo(tipo);
