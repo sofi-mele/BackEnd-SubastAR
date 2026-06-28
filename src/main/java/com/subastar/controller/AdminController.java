@@ -6,9 +6,11 @@ import com.subastar.dto.admin.CrearSubastaRequest;
 import com.subastar.dto.bien.AceptarBienRequest;
 import com.subastar.dto.bien.RechazarBienRequest;
 import com.subastar.model.MedioPago;
+import com.subastar.model.Subastador;
 import com.subastar.model.SubastaExtra;
 import com.subastar.repository.MedioPagoRepository;
 import com.subastar.repository.SubastaExtraRepository;
+import com.subastar.repository.SubastadorRepository;
 import com.subastar.service.AdminService;
 import com.subastar.service.AuthService;
 import com.subastar.service.BienService;
@@ -19,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,6 +34,22 @@ public class AdminController {
     private final AdminService adminService;
     private final SubastaExtraRepository subastaExtraRepository;
     private final MedioPagoRepository medioPagoRepository;
+    private final SubastadorRepository subastadorRepository;
+
+    @GetMapping("/subastadores")
+    public ResponseEntity<List<Map<String, Object>>> listarSubastadores() {
+        List<Map<String, Object>> result = subastadorRepository.findAll().stream()
+                .map(s -> {
+                    Map<String, Object> m = new java.util.LinkedHashMap<>();
+                    m.put("id", s.getIdentificador());
+                    m.put("matricula", s.getMatricula());
+                    m.put("region", s.getRegion());
+                    m.put("nombre", s.getPersona() != null ? s.getPersona().getNombre() : null);
+                    return m;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
 
     @PostMapping("/registros/{id}/aprobar")
     public ResponseEntity<Map<String, String>> aprobarRegistro(@PathVariable Integer id) {
@@ -65,7 +84,7 @@ public class AdminController {
     }
 
     @PostMapping("/subastas/crear")
-    public ResponseEntity<Map<String, Object>> crearSubasta(@Valid @RequestBody CrearSubastaRequest req) {
+    public ResponseEntity<Map<String, Object>> crearSubasta(@RequestBody CrearSubastaRequest req) {
         Integer id = adminService.crearSubasta(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id, "message", "Subasta creada correctamente."));
     }

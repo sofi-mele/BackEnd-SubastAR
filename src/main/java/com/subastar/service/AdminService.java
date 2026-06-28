@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,8 +27,6 @@ public class AdminService {
     private final SubastaExtraRepository subastaExtraRepository;
     private final CatalogoRepository catalogoRepository;
     private final ItemCatalogoRepository itemCatalogoRepository;
-    private final SubastadorRepository subastadorRepository;
-    private final EmpleadoRepository empleadoRepository;
     private final ProductoDetalleRepository productoDetalleRepository;
     private final ProductoRepository productoRepository;
     private final ClienteRepository clienteRepository;
@@ -37,29 +37,36 @@ public class AdminService {
     private final NotificacionService notificacionService;
 
     public Integer crearSubasta(CrearSubastaRequest req) {
-        Subastador subastador = subastadorRepository.findById(req.getRematadorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subastador no encontrado: " + req.getRematadorId()));
-        Empleado responsable = empleadoRepository.findById(req.getRematadorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado para rematador_id: " + req.getRematadorId()));
+        if (req.getNombre() == null || req.getNombre().isBlank())
+            throw new BadRequestException("El nombre es obligatorio");
+        if (req.getFecha() == null || req.getFecha().isBlank())
+            throw new BadRequestException("La fecha es obligatoria (yyyy-MM-dd)");
+        if (req.getHora() == null || req.getHora().isBlank())
+            throw new BadRequestException("La hora es obligatoria (HH:mm:ss)");
+        if (req.getMoneda() == null || req.getMoneda().isBlank())
+            throw new BadRequestException("La moneda es obligatoria");
+        if (req.getCategoriaRequerida() == null || req.getCategoriaRequerida().isBlank())
+            throw new BadRequestException("La categoria_requerida es obligatoria");
+
+        LocalDate fecha;
+        LocalTime hora;
+        try { fecha = LocalDate.parse(req.getFecha()); }
+        catch (Exception e) { throw new BadRequestException("Formato de fecha inválido, usar yyyy-MM-dd"); }
+        try { hora = LocalTime.parse(req.getHora()); }
+        catch (Exception e) { throw new BadRequestException("Formato de hora inválido, usar HH:mm:ss"); }
 
         Subasta subasta = new Subasta();
-        subasta.setFecha(req.getFecha());
-        subasta.setHora(req.getHora());
+        subasta.setFecha(fecha);
+        subasta.setHora(hora);
         subasta.setEstado("abierta");
         subasta.setCategoria(req.getCategoriaRequerida());
-        subasta.setSubastador(subastador);
         subasta = subastaRepository.save(subasta);
-
-        Catalogo catalogo = new Catalogo();
-        catalogo.setDescripcion(req.getNombre());
-        catalogo.setSubasta(subasta);
-        catalogo.setResponsable(responsable);
-        catalogoRepository.save(catalogo);
 
         SubastaExtra extra = new SubastaExtra();
         extra.setSubastaId(subasta.getIdentificador());
         extra.setNombre(req.getNombre());
         extra.setMoneda(req.getMoneda());
+        extra.setRematadorNombre(req.getRematadorNombre());
         subastaExtraRepository.save(extra);
 
         return subasta.getIdentificador();

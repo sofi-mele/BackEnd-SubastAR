@@ -184,7 +184,9 @@ public class SubastaService {
                 .count();
         r.setTotalArticulos((int) totalArticulos);
 
-        if (s.getSubastador() != null && s.getSubastador().getPersona() != null) {
+        if (extra != null && extra.getRematadorNombre() != null) {
+            r.setRematador(extra.getRematadorNombre());
+        } else if (s.getSubastador() != null && s.getSubastador().getPersona() != null) {
             r.setRematador(s.getSubastador().getPersona().getNombre());
         }
     }

@@ -30,6 +30,9 @@ public class SubastaExtra {
     @Column(name = "fecha_ultima_puja")
     private LocalDateTime fechaUltimaPuja;
 
+    @Column(name = "rematador_nombre")
+    private String rematadorNombre;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subasta_id", insertable = false, updatable = false)
     private Subasta subasta;
