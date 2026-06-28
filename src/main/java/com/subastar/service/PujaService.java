@@ -55,6 +55,13 @@ public class PujaService {
             throw new BadRequestException("La subasta no está en vivo");
         }
 
+        if (subasta.getFecha() != null && subasta.getHora() != null) {
+            java.time.LocalDateTime inicio = java.time.LocalDateTime.of(subasta.getFecha(), subasta.getHora());
+            if (java.time.LocalDateTime.now().isBefore(inicio)) {
+                throw new BadRequestException("La subasta aún no ha comenzado. Inicia el " + subasta.getFecha() + " a las " + subasta.getHora());
+            }
+        }
+
         Integer secondsLeftBeforeBid = timerService.ensureTimerStarted(subastaId);
         if (secondsLeftBeforeBid == null || secondsLeftBeforeBid <= 0) {
             throw new BadRequestException("El lote actual ya finalizo");
