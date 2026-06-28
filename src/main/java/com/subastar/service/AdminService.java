@@ -72,6 +72,37 @@ public class AdminService {
         return subasta.getIdentificador();
     }
 
+    public void modificarSubasta(Integer subastaId, com.subastar.dto.admin.ModificarSubastaRequest req) {
+        Subasta subasta = subastaRepository.findById(subastaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Subasta no encontrada"));
+        SubastaExtra extra = subastaExtraRepository.findBySubastaId(subastaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Detalle de subasta no encontrado"));
+
+        if (req.getNombre() != null && !req.getNombre().isBlank()) {
+            extra.setNombre(req.getNombre());
+        }
+        if (req.getFecha() != null && !req.getFecha().isBlank()) {
+            try { subasta.setFecha(LocalDate.parse(req.getFecha())); }
+            catch (Exception e) { throw new BadRequestException("Formato de fecha inválido, usar yyyy-MM-dd"); }
+        }
+        if (req.getHora() != null && !req.getHora().isBlank()) {
+            try { subasta.setHora(LocalTime.parse(req.getHora())); }
+            catch (Exception e) { throw new BadRequestException("Formato de hora inválido, usar HH:mm:ss"); }
+        }
+        if (req.getMoneda() != null && !req.getMoneda().isBlank()) {
+            extra.setMoneda(req.getMoneda());
+        }
+        if (req.getCategoriaRequerida() != null && !req.getCategoriaRequerida().isBlank()) {
+            subasta.setCategoria(req.getCategoriaRequerida());
+        }
+        if (req.getRematadorNombre() != null) {
+            extra.setRematadorNombre(req.getRematadorNombre());
+        }
+
+        subastaRepository.save(subasta);
+        subastaExtraRepository.save(extra);
+    }
+
     public void resetearSubasta(Integer subastaId) {
         Subasta subasta = subastaRepository.findById(subastaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subasta no encontrada"));

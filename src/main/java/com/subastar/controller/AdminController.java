@@ -3,6 +3,7 @@ package com.subastar.controller;
 import com.subastar.dto.admin.AsignarPolizaRequest;
 import com.subastar.dto.admin.AsignarSubastaRequest;
 import com.subastar.dto.admin.CrearSubastaRequest;
+import com.subastar.dto.admin.ModificarSubastaRequest;
 import com.subastar.dto.bien.AceptarBienRequest;
 import com.subastar.dto.bien.RechazarBienRequest;
 import com.subastar.model.MedioPago;
@@ -87,6 +88,14 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> crearSubasta(@RequestBody CrearSubastaRequest req) {
         Integer id = adminService.crearSubasta(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id, "message", "Subasta creada correctamente."));
+    }
+
+    @PutMapping("/subastas/{id}")
+    public ResponseEntity<Map<String, String>> modificarSubasta(
+            @PathVariable Integer id,
+            @RequestBody ModificarSubastaRequest req) {
+        adminService.modificarSubasta(id, req);
+        return ResponseEntity.ok(Map.of("message", "Subasta modificada correctamente."));
     }
 
     @PostMapping("/subastas/{id}/resetear")
