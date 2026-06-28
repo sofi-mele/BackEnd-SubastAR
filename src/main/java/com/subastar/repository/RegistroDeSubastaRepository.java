@@ -9,4 +9,5 @@ public interface RegistroDeSubastaRepository extends JpaRepository<RegistroDeSub
     List<RegistroDeSubasta> findByClienteIdentificador(Integer clienteId);
 
     boolean existsByProductoIdentificador(Integer productoId);
+    boolean existsByProductoIdentificadorAndSubastaIdentificador(Integer productoId, Integer subastaId);
 }
