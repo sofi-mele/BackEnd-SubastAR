@@ -385,15 +385,16 @@ public class SubastaEnVivoTimerService {
 
     private void publishLotChanged(Integer subastaId, ItemCatalogo item, int secondsLeft) {
         BigDecimal base = item.getPrecioBase();
+        BigDecimal minBid = base != null ? base.add(base.multiply(new BigDecimal("0.01"))) : null;
         AuctionRealtimeEvent event = AuctionRealtimeEvent.builder()
                 .type(RealtimeEventType.LOT_CHANGED)
                 .subastaId(subastaId)
                 .itemId(item.getIdentificador())
                 .timestamp(LocalDateTime.now())
                 .bestBid(BigDecimal.ZERO)
-                .minBid(base)
+                .minBid(minBid)
                 .maxBid(base != null ? base.multiply(new BigDecimal("1.20")) : null)
-                .pujaMinima(base)
+                .pujaMinima(minBid)
                 .pujaMaxima(base != null ? base.multiply(new BigDecimal("1.20")) : null)
                 .secondsLeft(secondsLeft)
                 .title("Nuevo lote")
