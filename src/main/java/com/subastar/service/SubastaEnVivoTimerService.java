@@ -134,6 +134,11 @@ public class SubastaEnVivoTimerService {
         return state != null ? secondsLeft(state) : null;
     }
 
+    public void resetTimer(Integer subastaId) {
+        timers.remove(subastaId);
+        log.info("Timer reseteado en memoria para subasta={}", subastaId);
+    }
+
     @Scheduled(fixedDelayString = "${app.auction.tick-ms:1000}")
     public void handleExpiredTimers() {
         Instant now = Instant.now();

@@ -35,6 +35,7 @@ public class AdminService {
     private final CompraExtraRepository compraExtraRepository;
     private final RegistroDeSubastaRepository registroDeSubastaRepository;
     private final NotificacionService notificacionService;
+    private final SubastaEnVivoTimerService timerService;
 
     public Integer crearSubasta(CrearSubastaRequest req) {
         if (req.getNombre() == null || req.getNombre().isBlank())
@@ -125,6 +126,10 @@ public class AdminService {
             itemCatalogoRepository.save(item);
         }
 
+        // Borrar compras generadas por el sistema (empresa o test) para esta subasta
+        List<RegistroDeSubasta> registros = registroDeSubastaRepository.findBySubastaIdentificador(subastaId);
+        registroDeSubastaRepository.deleteAll(registros);
+
         subasta.setEstado("abierta");
         subastaRepository.save(subasta);
 
@@ -139,6 +144,8 @@ public class AdminService {
         extra.setFechaInicioLote(null);
         extra.setFechaUltimaPuja(null);
         subastaExtraRepository.save(extra);
+
+        timerService.resetTimer(subastaId);
     }
 
     public void asignarSubasta(Integer bienId, AsignarSubastaRequest req) {

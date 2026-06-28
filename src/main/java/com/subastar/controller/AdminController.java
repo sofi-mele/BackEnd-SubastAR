@@ -15,6 +15,7 @@ import com.subastar.repository.SubastadorRepository;
 import com.subastar.service.AdminService;
 import com.subastar.service.AuthService;
 import com.subastar.service.BienService;
+import com.subastar.service.SubastaEnVivoTimerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,7 @@ public class AdminController {
     private final SubastaExtraRepository subastaExtraRepository;
     private final MedioPagoRepository medioPagoRepository;
     private final SubastadorRepository subastadorRepository;
+    private final SubastaEnVivoTimerService timerService;
 
     @GetMapping("/subastadores")
     public ResponseEntity<List<Map<String, Object>>> listarSubastadores() {
@@ -164,6 +166,7 @@ public class AdminController {
         extra.setFechaInicioLote(LocalDateTime.now());
         extra.setFechaUltimaPuja(null);
         subastaExtraRepository.save(extra);
+        timerService.resetTimer(subastaId);
         return ResponseEntity.ok(Map.of("message", "Timer iniciado", "segundosRestantes", 60));
     }
 }
