@@ -269,8 +269,9 @@ public class PujaService {
 
     private BigDecimal calcularPujaMinima(BigDecimal precioBase, BigDecimal mejorOferta) {
         if (precioBase == null) return BigDecimal.ZERO;
-        if (mejorOferta == null || mejorOferta.compareTo(BigDecimal.ZERO) <= 0) return precioBase;
-        return mejorOferta.add(precioBase.multiply(BigDecimal.valueOf(0.01)));
+        BigDecimal base = (mejorOferta == null || mejorOferta.compareTo(BigDecimal.ZERO) <= 0)
+                ? precioBase : mejorOferta;
+        return base.add(precioBase.multiply(BigDecimal.valueOf(0.01)));
     }
 
     private BigDecimal calcularPujaMaxima(BigDecimal precioBase, BigDecimal mejorOferta) {
