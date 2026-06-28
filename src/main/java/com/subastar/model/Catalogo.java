@@ -20,6 +20,6 @@ public class Catalogo {
     private Subasta subasta;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsable", nullable = false)
+    @JoinColumn(name = "responsable", nullable = true)
     private Empleado responsable;
 }

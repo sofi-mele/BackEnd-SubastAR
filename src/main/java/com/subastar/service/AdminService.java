@@ -162,10 +162,17 @@ public class AdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Subasta no encontrada: " + req.getSubastaId()));
 
         List<Catalogo> catalogos = catalogoRepository.findAllBySubastaIdentificador(req.getSubastaId());
+        Catalogo catalogo;
         if (catalogos.isEmpty()) {
-            throw new BadRequestException("La subasta no tiene catálogo");
+            SubastaExtra extra = subastaExtraRepository.findBySubastaId(req.getSubastaId()).orElse(null);
+            Subasta subasta = subastaRepository.findById(req.getSubastaId()).get();
+            Catalogo nuevo = new Catalogo();
+            nuevo.setDescripcion(extra != null && extra.getNombre() != null ? extra.getNombre() : "Subasta #" + req.getSubastaId());
+            nuevo.setSubasta(subasta);
+            catalogo = catalogoRepository.save(nuevo);
+        } else {
+            catalogo = catalogos.get(0);
         }
-        Catalogo catalogo = catalogos.get(0);
 
         Producto producto = productoRepository.findById(det.getProductoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
