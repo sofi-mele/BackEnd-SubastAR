@@ -159,6 +159,12 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Medio de pago rechazado correctamente."));
     }
 
+    @PostMapping("/clientes/{email}/readmitir")
+    public ResponseEntity<Map<String, String>> readmitirCliente(@PathVariable String email) {
+        adminService.readmitirCliente(email);
+        return ResponseEntity.ok(Map.of("message", "Cliente readmitido correctamente."));
+    }
+
     @PostMapping("/subastas/{subastaId}/iniciar-lote")
     public ResponseEntity<Map<String, Object>> iniciarLote(@PathVariable Integer subastaId) {
         SubastaExtra extra = subastaExtraRepository.findBySubastaId(subastaId)

@@ -34,6 +34,7 @@ public class AdminService {
     private final SeguroExtraRepository seguroExtraRepository;
     private final CompraExtraRepository compraExtraRepository;
     private final RegistroDeSubastaRepository registroDeSubastaRepository;
+    private final CredencialRepository credencialRepository;
     private final NotificacionService notificacionService;
     private final SubastaEnVivoTimerService timerService;
 
@@ -267,5 +268,15 @@ public class AdminService {
 
         notificacionService.notificarCostoEnvio(cliente, nombreItem,
                 registro.getImporte(), registro.getComision(), costoEnvio);
+    }
+
+    @Transactional
+    public void readmitirCliente(String email) {
+        Credencial cred = credencialRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + email));
+        Cliente cliente = clienteRepository.findById(cred.getPersonaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        cliente.setAdmitido("si");
+        clienteRepository.save(cliente);
     }
 }
