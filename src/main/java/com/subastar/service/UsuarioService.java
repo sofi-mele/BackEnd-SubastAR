@@ -111,7 +111,7 @@ public class UsuarioService {
                     .monto(multa.getMonto())
                     .estado(multa.getEstado())
                     .fecha(multa.getCreadoEn())
-                    .motivo("Pago no realizado dentro de las 72 horas")
+                    .motivo("No cuenta con el monto suficiente para cubrir el pago. Debe abonarlo antes de las 72hs, de lo contrario el caso será derivado a la justicia.")
                     .registroId(multa.getRegistroId())
                     .compraId(multa.getRegistroId())
                     .descripcionCompra(descripcion)
