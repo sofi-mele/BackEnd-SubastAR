@@ -29,6 +29,9 @@ public class CompraService {
     private final MultaRepository multaRepository;
     private final MedioPagoRepository medioPagoRepository;
     private final ChequeCertificadoRepository chequeCertificadoRepository;
+    private final CuentaBancariaRepository cuentaBancariaRepository;
+    private final TarjetaCreditoRepository tarjetaCreditoRepository;
+    private final SubastaExtraRepository subastaExtraRepository;
     private final CredencialRepository credencialRepository;
     private final ClienteRepository clienteRepository;
     private final NotificacionService notificacionService;
@@ -92,6 +95,28 @@ public class CompraService {
                         "El saldo disponible del cheque ($" + disponible + ") no alcanza para cubrir esta compra ($" + r.getImporte() + ")");
             }
         }
+
+        subastaExtraRepository.findBySubastaId(r.getSubasta().getIdentificador()).ifPresent(subastaExtra -> {
+            if ("USD".equals(subastaExtra.getMoneda())) {
+                if ("cheque_certificado".equals(medioPago.getTipo())) {
+                    throw new ForbiddenException("Los cheques certificados no son válidos para subastas en dólares.");
+                }
+                if ("cuenta_bancaria".equals(medioPago.getTipo())) {
+                    cuentaBancariaRepository.findByMedioPagoId(medioPago.getId()).ifPresent(cb -> {
+                        if ("Argentina".equalsIgnoreCase(cb.getPaisBanco())) {
+                            throw new ForbiddenException("Para subastas en dólares necesitás una cuenta bancaria de un banco extranjero.");
+                        }
+                    });
+                }
+                if ("tarjeta_credito".equals(medioPago.getTipo())) {
+                    tarjetaCreditoRepository.findByMedioPagoId(medioPago.getId()).ifPresent(tc -> {
+                        if (!tc.isEsInternacional()) {
+                            throw new ForbiddenException("Para subastas en dólares necesitás una tarjeta de crédito internacional.");
+                        }
+                    });
+                }
+            }
+        });
 
         CompraExtra extra = compraExtraRepository.findByRegistroId(compraId)
                 .orElseGet(() -> {
