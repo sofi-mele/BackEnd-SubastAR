@@ -62,7 +62,8 @@ public class AdminService {
         Subasta subasta = new Subasta();
         subasta.setFecha(fecha);
         subasta.setHora(hora);
-        subasta.setEstado("abierta");
+        boolean esFutura = java.time.LocalDateTime.of(fecha, hora).isAfter(java.time.LocalDateTime.now());
+        subasta.setEstado(esFutura ? "programada" : "abierta");
         subasta.setCategoria(req.getCategoriaRequerida());
         subasta = subastaRepository.save(subasta);
 

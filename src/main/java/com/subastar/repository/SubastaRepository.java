@@ -30,4 +30,6 @@ public interface SubastaRepository extends JpaRepository<Subasta, Integer> {
     List<Subasta> findByFiltros(
             @Param("estado") String estado,
             @Param("categoria") String categoria);
+
+    List<Subasta> findByEstado(String estado);
 }
