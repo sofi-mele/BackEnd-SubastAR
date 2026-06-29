@@ -2,3 +2,6 @@ target/
 .DS_Store
 .idea/
 *.class
+local.properties
+application-local.properties
+*.env
