@@ -175,10 +175,6 @@ public class AuthService {
         Cliente cliente = clienteRepository.findById(credencial.getPersonaId())
                 .orElseThrow(() -> new UnauthorizedException("Credenciales incorrectas"));
 
-        if ("bloqueado".equals(estadoCliente(cliente))) {
-            throw new com.subastar.exception.ForbiddenException("Cuenta bloqueada (usuario derivado a la justicia)");
-        }
-
         Persona persona = credencial.getPersona();
         String token = jwtUtil.generateToken(req.getEmail(), cliente.getIdentificador(), cliente.getCategoria());
         UsuarioResumen resumen = buildResumen(cliente, req.getEmail(), persona);
