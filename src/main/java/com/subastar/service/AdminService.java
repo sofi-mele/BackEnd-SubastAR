@@ -47,6 +47,8 @@ public class AdminService {
             throw new BadRequestException("La hora es obligatoria (HH:mm:ss)");
         if (req.getMoneda() == null || req.getMoneda().isBlank())
             throw new BadRequestException("La moneda es obligatoria");
+        if (!req.getMoneda().equals("ARS") && !req.getMoneda().equals("USD"))
+            throw new BadRequestException("La moneda debe ser ARS o USD");
         if (req.getCategoriaRequerida() == null || req.getCategoriaRequerida().isBlank())
             throw new BadRequestException("La categoria_requerida es obligatoria");
 
@@ -92,6 +94,8 @@ public class AdminService {
             catch (Exception e) { throw new BadRequestException("Formato de hora inválido, usar HH:mm:ss"); }
         }
         if (req.getMoneda() != null && !req.getMoneda().isBlank()) {
+            if (!req.getMoneda().equals("ARS") && !req.getMoneda().equals("USD"))
+                throw new BadRequestException("La moneda debe ser ARS o USD");
             extra.setMoneda(req.getMoneda());
         }
         if (req.getCategoriaRequerida() != null && !req.getCategoriaRequerida().isBlank()) {
