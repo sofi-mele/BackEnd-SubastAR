@@ -130,6 +130,38 @@ public class CompraService {
         return detalle;
     }
 
+    @Transactional
+    public void declararInsolvencia(String email, Integer compraId) {
+        Integer clienteId = getClienteId(email);
+        RegistroDeSubasta r = registroRepository.findById(compraId)
+                .orElseThrow(() -> new ResourceNotFoundException("Compra no encontrada"));
+        if (!r.getCliente().getIdentificador().equals(clienteId)) {
+            throw new ForbiddenException("La compra no pertenece al usuario");
+        }
+
+        CompraExtra extra = compraExtraRepository.findByRegistroId(compraId).orElse(null);
+        if (extra != null && "pagado".equals(extra.getEstadoPago())) {
+            throw new BadRequestException("Esta compra ya fue pagada");
+        }
+
+        if (multaRepository.existsByRegistroId(compraId)) {
+            throw new BadRequestException("Ya existe una multa registrada para esta compra");
+        }
+
+        BigDecimal montoMulta = r.getImporte().multiply(new BigDecimal("0.10"));
+        Multa multa = new Multa();
+        multa.setCliente(r.getCliente());
+        multa.setRegistroId(compraId);
+        multa.setMonto(montoMulta);
+        multa.setEstado("pendiente");
+        multaRepository.save(multa);
+
+        r.getCliente().setAdmitido("no");
+        clienteRepository.save(r.getCliente());
+
+        notificacionService.notificarMulta(r.getCliente(), montoMulta, "El usuario declaró no poseer fondos suficientes para cubrir el pago");
+    }
+
     private CompraResumen toResumen(RegistroDeSubasta r, CompraExtra extra) {
         asociarPolizaAlGanador(r);
         CompraResumen c = new CompraResumen();

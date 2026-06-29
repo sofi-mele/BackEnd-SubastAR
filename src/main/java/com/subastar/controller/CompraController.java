@@ -60,6 +60,14 @@ public class CompraController {
         return ResponseEntity.ok(Map.of("message", "Preferencia de entrega registrada correctamente."));
     }
 
+    @PostMapping("/{id}/declarar-insolvencia")
+    public ResponseEntity<Map<String, String>> declararInsolvencia(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UserDetails user) {
+        compraService.declararInsolvencia(user.getUsername(), id);
+        return ResponseEntity.ok(Map.of("message", "Multa aplicada. Tu cuenta ha sido bloqueada hasta regularizar la situación."));
+    }
+
     @GetMapping("/{id}/factura")
     public ResponseEntity<Map<String, String>> getFactura(
             @PathVariable Integer id,
