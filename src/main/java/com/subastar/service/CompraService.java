@@ -128,6 +128,13 @@ public class CompraService {
         extra.setEstadoPago("pagado");
         compraExtraRepository.save(extra);
 
+        // Capturar multa de esta compra ANTES de cancelarla para usarla en el total
+        BigDecimal multaDeEstaCompra = multaRepository.findByClienteIdentificadorAndEstado(clienteId, "pendiente")
+                .stream()
+                .filter(m -> compraId.equals(m.getRegistroId()))
+                .map(Multa::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         List<Multa> multasPendientes = multaRepository.findByClienteIdentificadorAndEstado(clienteId, "pendiente");
         for (Multa multa : multasPendientes) {
             if (compraId.equals(multa.getRegistroId())) {
@@ -151,7 +158,10 @@ public class CompraService {
         CompraDetalle detalle = toDetalle(r, extra);
         String nombreItem = r.getProducto().getDescripcionCatalogo() != null
                 ? r.getProducto().getDescripcionCatalogo() : "Compra #" + compraId;
-        notificacionService.notificarPagoRegularizado(r.getCliente(), nombreItem, detalle.getTotal());
+        BigDecimal totalNotificacion = r.getImporte();
+        if (r.getComision() != null) totalNotificacion = totalNotificacion.add(r.getComision());
+        if (multaDeEstaCompra.compareTo(BigDecimal.ZERO) > 0) totalNotificacion = totalNotificacion.add(multaDeEstaCompra);
+        notificacionService.notificarPagoRegularizado(r.getCliente(), nombreItem, totalNotificacion);
         return detalle;
     }
 
@@ -236,6 +246,7 @@ public class CompraService {
         }
 
         BigDecimal total = r.getImporte();
+        if (r.getComision() != null) total = total.add(r.getComision());
         if (extra != null && extra.getCostoEnvio() != null) total = total.add(extra.getCostoEnvio());
         if (base.getMulta() != null) total = total.add(base.getMulta());
         d.setTotal(total);
