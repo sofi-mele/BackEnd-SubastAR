@@ -3,11 +3,10 @@ package com.subastar.service;
 import com.subastar.model.Subasta;
 import com.subastar.repository.SubastaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -16,19 +15,14 @@ public class SubastaAperturaScheduler {
 
     private final SubastaRepository subastaRepository;
 
-    @Scheduled(fixedDelay = 60000)
+    // Convierte cualquier subasta "programada" a "abierta" al arrancar la app
+    @PostConstruct
     @Transactional
-    public void abrirSubastasProgramadas() {
+    public void repararSubastasProgramadas() {
         List<Subasta> programadas = subastaRepository.findByEstado("programada");
-        LocalDateTime ahora = LocalDateTime.now();
         for (Subasta s : programadas) {
-            if (s.getFecha() != null && s.getHora() != null) {
-                LocalDateTime inicio = LocalDateTime.of(s.getFecha(), s.getHora());
-                if (!ahora.isBefore(inicio)) {
-                    s.setEstado("abierta");
-                    subastaRepository.save(s);
-                }
-            }
+            s.setEstado("abierta");
+            subastaRepository.save(s);
         }
     }
 }

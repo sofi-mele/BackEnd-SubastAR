@@ -196,7 +196,6 @@ public class SubastaService {
         LocalDateTime inicio = LocalDateTime.of(s.getFecha(), s.getHora() != null ? s.getHora() : java.time.LocalTime.MIDNIGHT);
         LocalDateTime ahora = LocalDateTime.now();
         if (ahora.isBefore(inicio)) return "proxima";
-        if ("programada".equals(s.getEstado())) return "proxima";
         if ("abierta".equals(s.getEstado())) return "en_vivo";
         return "finalizada";
     }
