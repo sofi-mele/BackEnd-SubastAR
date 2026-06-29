@@ -3,6 +3,7 @@ package com.subastar.service;
 import com.subastar.dto.compra.CompraDetalle;
 import com.subastar.dto.compra.CompraResumen;
 import com.subastar.dto.compra.RegularizarPagoRequest;
+import com.subastar.exception.BadRequestException;
 import com.subastar.exception.ForbiddenException;
 import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.*;
@@ -27,6 +28,7 @@ public class CompraService {
     private final CompraExtraRepository compraExtraRepository;
     private final MultaRepository multaRepository;
     private final MedioPagoRepository medioPagoRepository;
+    private final ChequeCertificadoRepository chequeCertificadoRepository;
     private final CredencialRepository credencialRepository;
     private final ClienteRepository clienteRepository;
     private final NotificacionService notificacionService;
@@ -65,8 +67,31 @@ public class CompraService {
         if (!r.getCliente().getIdentificador().equals(clienteId)) {
             throw new ForbiddenException("La compra no pertenece al usuario");
         }
-        medioPagoRepository.findByIdAndClienteIdentificadorAndEliminadoFalse(req.getMedioPagoId(), clienteId)
+        MedioPago medioPago = medioPagoRepository.findByIdAndClienteIdentificadorAndEliminadoFalse(req.getMedioPagoId(), clienteId)
                 .orElseThrow(() -> new ForbiddenException("El medio de pago no pertenece al usuario"));
+
+        if ("cheque_certificado".equals(medioPago.getTipo())) {
+            ChequeCertificado cheque = chequeCertificadoRepository.findByMedioPagoId(medioPago.getId())
+                    .orElseThrow(() -> new BadRequestException("Cheque certificado no encontrado"));
+            BigDecimal yaUsado = compraExtraRepository.sumImportePagadoConMedioPago(medioPago.getId(), compraId);
+            BigDecimal disponible = cheque.getMontoCertificado().subtract(yaUsado);
+            if (r.getImporte().compareTo(disponible) > 0) {
+                if (!multaRepository.existsByRegistroId(compraId)) {
+                    BigDecimal montoMulta = r.getImporte().multiply(new BigDecimal("0.10"));
+                    Multa multa = new Multa();
+                    multa.setCliente(r.getCliente());
+                    multa.setRegistroId(compraId);
+                    multa.setMonto(montoMulta);
+                    multa.setEstado("pendiente");
+                    multaRepository.save(multa);
+                    r.getCliente().setAdmitido("no");
+                    clienteRepository.save(r.getCliente());
+                    notificacionService.notificarMulta(r.getCliente(), montoMulta, "Fondos insuficientes para cubrir el pago");
+                }
+                throw new BadRequestException(
+                        "El saldo disponible del cheque ($" + disponible + ") no alcanza para cubrir esta compra ($" + r.getImporte() + ")");
+            }
+        }
 
         CompraExtra extra = compraExtraRepository.findByRegistroId(compraId)
                 .orElseGet(() -> {

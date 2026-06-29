@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -14,4 +15,7 @@ public interface CompraExtraRepository extends JpaRepository<CompraExtra, Intege
 
     @Query("SELECT ce FROM CompraExtra ce WHERE ce.estadoPago = 'pendiente' AND ce.fechaCompra <= :fechaLimite")
     List<CompraExtra> findComprasPendientesVencidas(@Param("fechaLimite") LocalDateTime fechaLimite);
+
+    @Query("SELECT COALESCE(SUM(ce.registroDeSubasta.importe), 0) FROM CompraExtra ce WHERE ce.medioPagoId = :medioPagoId AND ce.estadoPago = 'pagado' AND ce.registroId != :excludeRegistroId")
+    BigDecimal sumImportePagadoConMedioPago(@Param("medioPagoId") Integer medioPagoId, @Param("excludeRegistroId") Integer excludeRegistroId);
 }
