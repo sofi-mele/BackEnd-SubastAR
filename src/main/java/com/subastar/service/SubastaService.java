@@ -194,7 +194,7 @@ public class SubastaService {
     private String calcEstadoApi(Subasta s) {
         if (s.getFecha() == null) return "proxima";
         LocalDateTime inicio = LocalDateTime.of(s.getFecha(), s.getHora() != null ? s.getHora() : java.time.LocalTime.MIDNIGHT);
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(java.time.ZoneId.of("America/Argentina/Buenos_Aires"));
         if (ahora.isBefore(inicio)) return "proxima";
         if ("abierta".equals(s.getEstado())) return "en_vivo";
         return "finalizada";

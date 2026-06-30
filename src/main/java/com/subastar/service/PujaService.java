@@ -57,7 +57,7 @@ public class PujaService {
 
         if (subasta.getFecha() != null && subasta.getHora() != null) {
             java.time.LocalDateTime inicio = java.time.LocalDateTime.of(subasta.getFecha(), subasta.getHora());
-            if (java.time.LocalDateTime.now().isBefore(inicio)) {
+            if (java.time.LocalDateTime.now(java.time.ZoneId.of("America/Argentina/Buenos_Aires")).isBefore(inicio)) {
                 throw new BadRequestException("La subasta aún no ha comenzado. Inicia el " + subasta.getFecha() + " a las " + subasta.getHora());
             }
         }
