@@ -220,6 +220,8 @@ public class PujaService {
         r.setMonto(p.getImporte());
         if (pe != null) r.setTimestamp(pe.getTimestampPuja());
         r.setEsGanadora("si".equals(p.getGanador()));
+        Integer sid = p.getAsistente().getSubasta().getIdentificador();
+        subastaExtraRepository.findBySubastaId(sid).ifPresent(se -> r.setMoneda(se.getMoneda()));
         return r;
     }
 

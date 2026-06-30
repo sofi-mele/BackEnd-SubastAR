@@ -25,4 +25,5 @@ public class CompraResumen {
     private String polizaId;
     @JsonProperty("numero_poliza")
     private String numeroPoliza;
+    private String moneda;
 }

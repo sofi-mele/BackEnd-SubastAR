@@ -214,6 +214,8 @@ public class CompraService {
         BigDecimal multaTotal = multaRepository
                 .sumMultasPendientesByClienteId(r.getCliente().getIdentificador());
         c.setMulta(multaTotal.compareTo(BigDecimal.ZERO) > 0 ? multaTotal : null);
+        subastaExtraRepository.findBySubastaId(r.getSubasta().getIdentificador())
+                .ifPresent(se -> c.setMoneda(se.getMoneda()));
         return c;
     }
 

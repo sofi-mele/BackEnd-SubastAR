@@ -16,4 +16,5 @@ public class PujaResumen {
     private LocalDateTime timestamp;
     @JsonProperty("es_ganadora")
     private boolean esGanadora;
+    private String moneda;
 }
