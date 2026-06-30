@@ -1,6 +1,9 @@
 package com.subastar.service;
 
+import com.subastar.dto.realtime.AuctionRealtimeEvent;
+import com.subastar.dto.realtime.RealtimeEventType;
 import com.subastar.model.Subasta;
+import com.subastar.realtime.RealtimeEventPublisher;
 import com.subastar.repository.SubastaRepository;
 import lombok.RequiredArgsConstructor;
 import jakarta.annotation.PostConstruct;
@@ -14,8 +17,8 @@ import java.util.List;
 public class SubastaAperturaScheduler {
 
     private final SubastaRepository subastaRepository;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
-    // Convierte cualquier subasta "programada" a "abierta" al arrancar la app
     @PostConstruct
     @Transactional
     public void repararSubastasProgramadas() {
@@ -23,6 +26,10 @@ public class SubastaAperturaScheduler {
         for (Subasta s : programadas) {
             s.setEstado("abierta");
             subastaRepository.save(s);
+            realtimeEventPublisher.publishAuctionListEvent(AuctionRealtimeEvent.builder()
+                    .type(RealtimeEventType.AUCTION_STATE_CHANGED)
+                    .subastaId(s.getIdentificador())
+                    .build());
         }
     }
 }

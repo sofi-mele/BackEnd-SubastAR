@@ -3,9 +3,12 @@ package com.subastar.service;
 import com.subastar.dto.admin.AsignarPolizaRequest;
 import com.subastar.dto.admin.AsignarSubastaRequest;
 import com.subastar.dto.admin.CrearSubastaRequest;
+import com.subastar.dto.realtime.AuctionRealtimeEvent;
+import com.subastar.dto.realtime.RealtimeEventType;
 import com.subastar.exception.BadRequestException;
 import com.subastar.exception.ResourceNotFoundException;
 import com.subastar.model.*;
+import com.subastar.realtime.RealtimeEventPublisher;
 import com.subastar.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,7 @@ public class AdminService {
     private final CredencialRepository credencialRepository;
     private final NotificacionService notificacionService;
     private final SubastaEnVivoTimerService timerService;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     public Integer crearSubasta(CrearSubastaRequest req) {
         if (req.getNombre() == null || req.getNombre().isBlank())
@@ -73,6 +77,11 @@ public class AdminService {
         extra.setRematadorNombre(req.getRematadorNombre());
         subastaExtraRepository.save(extra);
 
+        realtimeEventPublisher.publishAuctionListEvent(AuctionRealtimeEvent.builder()
+                .type(RealtimeEventType.AUCTION_CREATED)
+                .subastaId(subasta.getIdentificador())
+                .build());
+
         return subasta.getIdentificador();
     }
 
@@ -107,6 +116,11 @@ public class AdminService {
 
         subastaRepository.save(subasta);
         subastaExtraRepository.save(extra);
+
+        realtimeEventPublisher.publishAuctionListEvent(AuctionRealtimeEvent.builder()
+                .type(RealtimeEventType.AUCTION_UPDATED)
+                .subastaId(subastaId)
+                .build());
     }
 
     public void resetearSubasta(Integer subastaId) {
