@@ -115,13 +115,6 @@ public class PujaService {
                     }
                 });
             }
-            if ("tarjeta_credito".equals(medioPago.getTipo())) {
-                tarjetaCreditoRepository.findByMedioPagoId(medioPago.getId()).ifPresent(tc -> {
-                    if (!tc.isEsInternacional()) {
-                        throw new ForbiddenException("Para subastas en dólares necesitás una tarjeta de crédito internacional.");
-                    }
-                });
-            }
         }
 
         // A-11: validar que la puja no supere el límite del medio de pago

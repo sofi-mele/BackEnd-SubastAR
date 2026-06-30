@@ -108,13 +108,6 @@ public class CompraService {
                         }
                     });
                 }
-                if ("tarjeta_credito".equals(medioPago.getTipo())) {
-                    tarjetaCreditoRepository.findByMedioPagoId(medioPago.getId()).ifPresent(tc -> {
-                        if (!tc.isEsInternacional()) {
-                            throw new ForbiddenException("Para subastas en dólares necesitás una tarjeta de crédito internacional.");
-                        }
-                    });
-                }
             }
         });
 
