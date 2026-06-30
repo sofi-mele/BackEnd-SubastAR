@@ -16,4 +16,5 @@ public class ResultadoPujaResponse {
     private boolean fueGanador;
     @JsonProperty("monto_final")
     private BigDecimal montoFinal;
+    private String moneda;
 }

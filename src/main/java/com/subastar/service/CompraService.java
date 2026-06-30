@@ -227,6 +227,7 @@ public class CompraService {
         d.setValorPujado(base.getValorPujado()); d.setComision(base.getComision()); d.setMulta(base.getMulta());
         d.setEstadoPago(base.getEstadoPago()); d.setEstadoEntrega(base.getEstadoEntrega());
         d.setPolizaId(base.getPolizaId()); d.setNumeroPoliza(base.getNumeroPoliza());
+        d.setMoneda(base.getMoneda());
 
         if (extra != null) {
             if (extra.getMedioPagoId() != null) {

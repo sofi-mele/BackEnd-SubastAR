@@ -147,16 +147,18 @@ public class SubastaService {
     }
 
     public ResultadoPujaResponse getResultado(Integer subastaId, Integer itemId, String email) {
-        subastaRepository.findById(subastaId)
+        Subasta s = subastaRepository.findById(subastaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subasta no encontrada"));
         ItemCatalogo item = itemCatalogoRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado"));
         if (!item.getCatalogo().getSubasta().getIdentificador().equals(subastaId)) {
             throw new ResourceNotFoundException("Item no encontrado en la subasta");
         }
+        SubastaExtra extra = subastaExtraRepository.findBySubastaId(subastaId).orElse(null);
         ResultadoPujaResponse response = new ResultadoPujaResponse();
         response.setItemId(itemId);
         response.setNombreItem(item.getProducto().getDescripcionCatalogo());
+        response.setMoneda(resolveMoneda(s, extra));
         if (!"si".equals(item.getSubastado())) {
             response.setEstado("en_curso");
             return response;

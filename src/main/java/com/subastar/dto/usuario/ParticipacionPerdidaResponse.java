@@ -18,4 +18,5 @@ public class ParticipacionPerdidaResponse {
     private String nombreGanador;
     private LocalDateTime fechaPuja;
     private Integer subastaId;
+    private String moneda;
 }

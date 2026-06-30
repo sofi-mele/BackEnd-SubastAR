@@ -31,6 +31,7 @@ public class UsuarioService {
     private final RegistroDeSubastaRepository registroDeSubastaRepository;
     private final MultaRepository multaRepository;
     private final PujoExtraRepository pujoExtraRepository;
+    private final SubastaExtraRepository subastaExtraRepository;
 
     public UsuarioDetalle getMe(String email) {
         Credencial cred = credencialRepository.findByEmail(email)
@@ -223,6 +224,11 @@ public class UsuarioService {
             Integer subastaId = item.getCatalogo() != null && item.getCatalogo().getSubasta() != null
                     ? item.getCatalogo().getSubasta().getIdentificador() : null;
 
+            String moneda = subastaId != null
+                    ? subastaExtraRepository.findBySubastaId(subastaId)
+                        .map(SubastaExtra::getMoneda).orElse("ARS")
+                    : "ARS";
+
             result.add(ParticipacionPerdidaResponse.builder()
                     .itemId(itemId)
                     .nombreProducto(producto != null ? producto.getDescripcionCatalogo() : null)
@@ -233,6 +239,7 @@ public class UsuarioService {
                     .nombreGanador(nombreGanador)
                     .fechaPuja(fechaPuja)
                     .subastaId(subastaId)
+                    .moneda(moneda)
                     .build());
         }
 
