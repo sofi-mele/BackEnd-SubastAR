@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -100,8 +101,15 @@ public class SubastaService {
         EstadoEnVivoResponse resp = new EstadoEnVivoResponse();
         Integer secondsLeft = null;
         if ("abierta".equals(s.getEstado())) {
-            secondsLeft = timerService.ensureTimerStarted(subastaId);
-            extra = subastaExtraRepository.findBySubastaId(subastaId).orElse(null);
+            boolean yaComenzo = true;
+            if (s.getFecha() != null && s.getHora() != null) {
+                LocalDateTime inicio = LocalDateTime.of(s.getFecha(), s.getHora());
+                yaComenzo = !LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")).isBefore(inicio);
+            }
+            if (yaComenzo) {
+                secondsLeft = timerService.ensureTimerStarted(subastaId);
+                extra = subastaExtraRepository.findBySubastaId(subastaId).orElse(null);
+            }
         }
 
         if (extra != null && extra.getItemActualId() != null) {
