@@ -22,4 +22,5 @@ public class EstadoEnVivoResponse {
     private List<PujaResumen> historialPujas;
     @JsonProperty("segundos_restantes")
     private Integer segundosRestantes;
+    private String moneda;
 }

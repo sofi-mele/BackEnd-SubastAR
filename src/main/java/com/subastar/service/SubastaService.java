@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SubastaService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubastaService.class);
+
     private final SubastaRepository subastaRepository;
     private final SubastaExtraRepository subastaExtraRepository;
     private final CatalogoRepository catalogoRepository;
@@ -112,6 +114,9 @@ public class SubastaService {
             }
         }
 
+        String moneda = resolveMoneda(s, extra);
+        resp.setMoneda(moneda);
+
         if (extra != null && extra.getItemActualId() != null) {
             ItemCatalogo itemActual = itemCatalogoRepository.findById(extra.getItemActualId()).orElse(null);
             if (itemActual != null) {
@@ -134,7 +139,7 @@ public class SubastaService {
 
                 List<PujaResumen> historial = pujoRepository
                         .findByItemIdentificadorOrderByIdentificadorDesc(itemActual.getIdentificador())
-                        .stream().map(this::toPujaResumen).collect(Collectors.toList());
+                        .stream().map(p -> toPujaResumen(p, moneda)).collect(Collectors.toList());
                 resp.setHistorialPujas(historial);
             }
         }
@@ -184,7 +189,7 @@ public class SubastaService {
             r.setFechaInicio(LocalDateTime.of(s.getFecha(), s.getHora()));
         }
         r.setCategoria(s.getCategoria());
-        r.setMoneda(extra != null ? extra.getMoneda() : "ARS");
+        r.setMoneda(resolveMoneda(s, extra));
         r.setEstado(calcEstadoApi(s));
 
         long totalArticulos = catalogoRepository.findAllBySubastaIdentificador(s.getIdentificador())
@@ -197,6 +202,23 @@ public class SubastaService {
         } else if (s.getSubastador() != null && s.getSubastador().getPersona() != null) {
             r.setRematador(s.getSubastador().getPersona().getNombre());
         }
+    }
+
+    /**
+     * Resuelve la moneda de una subasta a partir de su registro en subastas_extra.
+     * Antes se asumía "ARS" de forma silenciosa cuando faltaba el dato; ahora se loguea
+     * un warning para detectar subastas mal cargadas (extra ausente o moneda null).
+     */
+    private String resolveMoneda(Subasta s, SubastaExtra extra) {
+        if (extra == null) {
+            log.warn("Subasta {} sin registro en subastas_extra; usando ARS por defecto", s.getIdentificador());
+            return "ARS";
+        }
+        if (extra.getMoneda() == null) {
+            log.warn("Subasta {} con subastas_extra.moneda null; usando ARS por defecto", s.getIdentificador());
+            return "ARS";
+        }
+        return extra.getMoneda();
     }
 
     private String calcEstadoApi(Subasta s) {
@@ -287,7 +309,7 @@ public class SubastaService {
         return "disponible";
     }
 
-    private PujaResumen toPujaResumen(Pujo p) {
+    private PujaResumen toPujaResumen(Pujo p, String moneda) {
         PujaResumen r = new PujaResumen();
         r.setId(p.getIdentificador());
         r.setUsuarioId(p.getAsistente().getCliente().getIdentificador());
@@ -297,6 +319,7 @@ public class SubastaService {
         pujoExtraRepository.findByPujoId(p.getIdentificador())
                 .ifPresent(pe -> r.setTimestamp(pe.getTimestampPuja()));
         r.setEsGanadora("si".equals(p.getGanador()));
+        r.setMoneda(moneda);
         return r;
     }
 
